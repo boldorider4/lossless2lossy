@@ -12,7 +12,6 @@ atomicParsley_bin=$(which AtomicParsley)
 mp4box_bin=$(which mp4box)
 
 # encoding options
-apple_aac_enable=1
 bitrate="256000"
 afconvert_opt='-v -d aac -f m4af -u pgcm 2 -q 127 -s 2 -b "$bitrate" --soundcheck-generate "$relative_path$wav_file" "$subdir$aac_file"'
 fdkaac_opt='--profile 2 --bitrate-mode 0 --bitrate "$bitrate" --bandwidth 20000 --afterburner 1 -o "$subdir$aac_file" --ignorelength "$relative_path$wav_file"'
@@ -60,7 +59,7 @@ function parse_cmdl_line()
         case "$1" in
             -h|--help)
                 echo "usage"
-                echo "./flac2itunes.sh [-hcygapkbqnme] [--help|cover|year|genre|album|performer|comment|bitrate|cuefile|disc|discs|apple]"
+                echo "./flac2itunes.sh [-hcygapkbqnmef] [--help|cover|year|genre|album|performer|comment|bitrate|cuefile|disc|discs|apple|fdk]"
                 echo "    -h | --help prints this help"
                 echo "    -c | --cover sets the cover file"
                 echo "    -y | --year sets the year"
@@ -73,7 +72,8 @@ function parse_cmdl_line()
                 echo "    -d | --path sets the output path for the converted files"
                 echo "    -n | --disc sets the number of disc"
                 echo "    -m | --discs sets the total number of discs"
-                echo "    -e | --apple if set it forces Apple's aac encoder, FDK otherwise"
+                echo "    -e | --apple if set it forces Apple's aac encoder"
+                echo "    -f | --fdk if set it forces FDK aac encoder"
                 shift
                 exit 0
                 ;;
@@ -125,7 +125,20 @@ function parse_cmdl_line()
 	            shift
 	            ;;
             -e|--apple)
+                if [ -n "$fdk_aac_enable" ]
+                then
+                    echo either --apple or --fdk must be used
+                    exit 1
+                fi
                 apple_aac_enable=1
+	            ;;
+            -f|--fdk)
+                if [ -n "$apple_aac_enable" ]
+                then
+                    echo either --apple or --fdk must be used
+                    exit 1
+                fi
+                fdk_aac_enable=1
 	            ;;
             --) 
 	            shift
@@ -236,13 +249,20 @@ function get_album_tags()
 
 function select_encoder()
 {
-    if [ $apple_aac_enable -eq 1 ]
+    if [[ -z $apple_aac_enable && -z $fdk_aac_enable ]]
+    then
+        apple_aac_enable=1
+    fi
+    if [ -n "$apple_aac_enable" ]
     then
         aac_tool=$afconvert_bin
         aac_tool_opt=$afconvert_opt
-    else
+    elif [ -n "$fdk_aac_enable" ]
+    then
         aac_tool=$fdkaac_bin
         aac_tool_opt=$fdkaac_opt
+    else
+        echo no encoder has been selected
     fi
 }
 
@@ -293,11 +313,12 @@ function tag_converted_files()
     fi
 }
 
-cmdl_opt=$(getopt -n "$0" -o hc:y:g:a:p:k:b:q:d:n:m:e --long "help,cover:,year:,genre:,album:,performer:,comment:,bitrate:,cuefile:,path:,disc:,discs:apple" -- "$@")
+cmdl_opt=$(getopt -n "$0" -o hc:y:g:a:p:k:b:q:d:n:m:ef --long "help,cover:,year:,genre:,album:,performer:,comment:,bitrate:,cuefile:,path:,disc:,discs:,apple,fdk" -- "$@")
     
 parse_cmdl_line
 #print_debug
 select_cuefile; op_mode=$?
+select_encoder
 
 if [ $op_mode -eq 0 ]
 then
@@ -347,7 +368,6 @@ then
         fi
 
         echo "converting track # $track to aac format..."
-        select_encoder
         eval $aac_tool $aac_tool_opt &> /dev/null
 
         echo "tagging track # $track"
@@ -359,4 +379,6 @@ then
         fi
         echo
     done
+else
+    echo this more is currently not implemented
 fi
