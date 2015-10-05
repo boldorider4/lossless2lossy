@@ -40,6 +40,55 @@ function print_debug()
     fi
 }
 
+function check_tools()
+{
+    if [ -z "ack_bin" ]
+    then
+        echo ack is not correctly installed
+        exit 1
+    fi
+    if [ -z "ack_bin" ]
+    then
+        echo ack is not correctly installed
+        exit 1
+    fi
+    if [ -z "$ack_bin" ]
+    then
+        echo ack is not correctly installed
+        exit 1
+    fi
+    if [ -z "$sed_bin" ]
+    then
+        echo ssed is not correctly installed
+        exit 1
+    fi
+    if [ -z "$cueprint_bin" ]
+    then
+        echo cueprint is not correctly installed
+        exit 1
+    fi
+    if [ -z "$ffmpeg_bin" ]
+    then
+        echo ffmpeg is not correctly installed
+        exit 1
+    fi
+    if [ -z "shntool_bin" ]
+    then
+        echo shntool is not correctly installed
+        exit 1
+    fi
+    if [[ -z "$afconvert_bin" && -z "$fdkaac_bin" ]]
+    then
+        echo both afconvert and fdkaac are not correctly installed
+        exit 1
+    fi
+    if [[ -z "$atomicParsley_bin" && -z "$mp4box_bin" ]]
+    then
+        echo both atomicParsley and mp4box are not correctly installed
+        exit 1
+    fi
+}
+
 function capitalize()
 {
     echo "$@" | $sed_bin  's/ \(.\)/ \U\1/g' | $sed_bin  's/^\(.\)/\U\1/g' | $sed_bin "s/'n'\([a-z]\)/'N'\U\1/g" | $sed_bin "s/\( '. *\)/\U\1/g" | $sed_bin 's/\((.\)/\U\1/g'
@@ -314,7 +363,8 @@ function tag_converted_files()
 }
 
 cmdl_opt=$(getopt -n "$0" -o hc:y:g:a:p:k:b:q:d:n:m:ef --long "help,cover:,year:,genre:,album:,performer:,comment:,bitrate:,cuefile:,path:,disc:,discs:,apple,fdk" -- "$@")
-    
+
+check_tools
 parse_cmdl_line
 #print_debug
 select_cuefile; op_mode=$?
