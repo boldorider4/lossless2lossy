@@ -45,50 +45,49 @@ function print_debug()
 
 function check_tools()
 {
-    if [ -z "ack_bin" ]
-    then
-        echo ack is not correctly installed
-        exit 1
-    fi
-    if [ -z "ack_bin" ]
-    then
-        echo ack is not correctly installed
-        exit 1
-    fi
+    local tools_missing=""
+    local tools_missing_flag=0
+
     if [ -z "$ack_bin" ]
     then
-        echo ack is not correctly installed
-        exit 1
+	tools_missing+=" ack"
+	tools_missing_flag=1
     fi
     if [ -z "$sed_bin" ]
     then
-        echo ssed is not correctly installed
-        exit 1
+	tools_missing+=" ssed"
+	tools_missing_flag=1
     fi
     if [ -z "$cueprint_bin" ]
     then
-        echo cueprint is not correctly installed
-        exit 1
+	tools_missing+=" cuetools"
+	tools_missing_flag=1
     fi
     if [ -z "$ffmpeg_bin" ]
     then
-        echo ffmpeg is not correctly installed
-        exit 1
+	tools_missing+=" ffmpeg"
+	tools_missing_flag=1
     fi
-    if [ -z "shntool_bin" ]
+    if [ -z "$shntool_bin" ]
     then
-        echo shntool is not correctly installed
-        exit 1
+	tools_missing+=" shntool"
+	tools_missing_flag=1
     fi
     if [[ -z "$afconvert_bin" && -z "$fdkaac_bin" ]]
     then
-        echo both afconvert and fdkaac are not correctly installed
-        exit 1
+	tools_missing+=" [afconvert|fdkaac]"
+	tools_missing_flag=1
     fi
     if [[ -z "$atomicParsley_bin" && -z "$mp4box_bin" ]]
     then
-        echo both atomicParsley and mp4box are not correctly installed
-        exit 1
+	tools_missing+=" [AtomicParsley|mp4box]"
+	tools_missing_flag=1
+    fi
+
+    if [ $tools_missing_flag -eq 1 ]
+    then
+	echo the missing tools are:$tools_missing
+	exit 1
     fi
 }
 
@@ -297,15 +296,15 @@ function get_album_tags()
         then
             local infile=$(find . -iname "*.$file_format" | $sed_bin -n 1p)
             $ffmpeg_bin -i "$infile" -y -f ffmetadata temp.txt &> /dev/null
-            performer=$(sed -n 's/^ARTIST=\(.*\)$/\1/p' temp.txt)
+            performer=$($sed_bin -n 's/^ARTIST=\(.*\)$/\1/p' temp.txt)
             performer=$(capitalize $performer)
             album_artist=$performer
-            album=$(sed -n 's/^ALBUM=\(.*\)$/\1/p' temp.txt)
+            album=$($sed_bin -n 's/^ALBUM=\(.*\)$/\1/p' temp.txt)
             album=$(capitalize $album)
-            genre=$(sed -n 's/^GENRE=\(.*\)$/\1/p' temp.txt)
+            genre=$($sed_bin -n 's/^GENRE=\(.*\)$/\1/p' temp.txt)
             genre=$(capitalize $genre)
-            year=$(sed -n 's/^DATE=\(.*\)$/\1/p' temp.txt)
-            comment=$(sed -n 's/^COMMENT=\(.*\)$/\1/p' temp.txt)
+            year=$($sed_bin -n 's/^DATE=\([0-9][0-9]*\)$/\1/p' temp.txt)
+            comment=$($sed_bin -n 's/^COMMENT=\(.*\)$/\1/p' temp.txt)
 
             if [ -f "temp.txt" ]
             then
@@ -315,6 +314,9 @@ function get_album_tags()
             echo no file found
             exit 1
         fi
+    else
+	echo unsupported mode
+	exit 1
     fi
 
     if [ -z "$album_artist" ]
@@ -408,6 +410,8 @@ function tag_converted_files()
 
 cmdl_opt=$(getopt -n "$0" -o hc:y:g:a:p:k:b:q:d:n:m:ef --long "help,cover:,year:,genre:,album:,performer:,comment:,bitrate:,cuefile:,path:,disc:,discs:,apple,fdk" -- "$@")
 
+### BEGINNING OF SCRIPT ###
+
 check_tools
 parse_cmdl_line
 select_cuefile; op_mode=$?
@@ -435,10 +439,11 @@ then
     $shntool_bin split -f "$cuefile" -d "$relative_path" -o wav -O always "$infile" &> /dev/null
 fi
 
-for (( track=1; track<=$n_tracks; track++ ))
+for (( track_idx=1; track<=$n_tracks; track++ ))
 do
     if [ $op_mode -eq 0 ]
     then
+        track=$track_idx
         title=$($cueprint_bin "$cuefile" 2>/dev/null -t '%t\n' -n $track)
         title=$(capitalize $title)
         if [[ -n $album_artist && $compilation -eq 0 ]]
@@ -456,8 +461,14 @@ do
     then
         infile=$(find . -iname "*.$file_format" | $sed_bin -n ${track}p)
         $ffmpeg_bin -i "$infile" -y -f ffmetadata temp.txt &> /dev/null
-        title=$(sed -n 's/^TITLE=\(.*\)$/\1/p' temp.txt)
+        title=$($sed_bin -n 's/^TITLE=\(.*\)$/\1/p' temp.txt)
         title=$(capitalize $title)
+	track=$($sed_bin -n 's/^TRACK=\([0-9][0-9]*\)$/\1/p' temp.txt)
+        if [ -z "$track" ]
+        then
+	    echo "the track information for $infile is missing"
+	    track=$track_idx
+	fi
         if [ -f "temp.txt" ]
         then
             rm temp.txt
@@ -466,9 +477,12 @@ do
         then
             echo no title set by $file_format file
         fi
+    else
+	echo unsupported mode
+	exit 1
     fi
     
-	aac_file="$(printf "%02d" ${track}) - $(echo ${title}.m4a | $sed_bin 's/?/-/' | $sed_bin 's/\//-/')"
+    aac_file="$(printf "%02d" ${track}) - $(echo ${title}.m4a | $sed_bin 's/?/-/' | $sed_bin 's/\//-/')"
     wav_file="split-track$(printf "%02d" ${track}).wav"
 
     if [[ "$n_files" -eq "$n_tracks" && $op_mode -eq 0 ]]
