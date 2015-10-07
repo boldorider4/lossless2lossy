@@ -24,12 +24,15 @@ function print_debug()
 {
     echo $album
     echo $album_artist
+    echo $performer
     echo $year
     echo $genre
     echo $comment
     echo $bitrate
     echo $cuefile
     echo $cover
+    echo $n_files
+    echo $n_tracks
     if [ -n "$disc_idx" ]
     then
         echo $disc_idx
@@ -230,69 +233,107 @@ function select_cuefile()
 
 function get_album_tags()
 {
-    cat "$cuefile" | $sed_bin 's/^REM //' >> temp.cue
+    if [ $1 -eq 0 ]
+    then
+        cat "$cuefile" | $sed_bin 's/^REM //' >> temp.cue
 
-    n_tracks=$($cueprint_bin temp.cue 2> /dev/null -d '%N\n')
-    if [ $n_tracks -lt 1 ]
+        n_tracks=$($cueprint_bin temp.cue 2> /dev/null -d '%N\n')
+        if [ $n_tracks -lt 1 ]
+        then
+            echo "no track detected in cuefile"
+            exit 1
+        fi
+        n_files=$($ack_bin '^FILE "' "$cuefile" | wc -l)
+        if [ $n_tracks -lt 1 ]
+        then
+            echo "no file detected in cuefile"
+            exit 1
+        fi
+        if [[ $n_files -gt 1 && $n_files -ne $n_tracks ]]
+        then
+            echo "the number of files in the cuesheet is not consistent with the number of tracks"
+            exit 1
+        fi
+
+        if [ -z "$album_artist" ]
+        then
+            album_artist=$($cueprint_bin temp.cue 2>/dev/null -d '%P\n')
+            album_artist=$(capitalize $album_artist)
+        fi
+        if [ -z "$album" ]
+        then
+            album=$($cueprint_bin temp.cue 2>/dev/null -d '%T\n')
+            album=$(capitalize $album)
+        fi
+        if [ -z "$genre" ]
+        then
+            genre=$($cueprint_bin temp.cue 2>/dev/null -d '%G\n')
+            genre=$(capitalize $genre)
+        fi
+        if [ -z "$year" ]
+        then
+            year=$($sed_bin -n 's/^DATE \([0-9]*\)[^0-9]*$/\1/p' temp.cue)
+        fi
+        if [ -z "$comment" ]
+        then
+            comment=$($sed_bin -n 's/^COMMENT "\(.*\)".*$/\1/p' temp.cue)
+        fi
+        if [ -f "temp.cue" ]
+        then
+            rm temp.cue
+        fi
+    elif [ $1 -eq 2 ]
     then
-        echo "no track detected in cuefile"
-        exit 1
-    fi
-    n_files=$($ack_bin '^FILE "' "$cuefile" | wc -l)
-    if [ $n_tracks -lt 1 ]
-    then
-        echo "no file detected in cuefile"
-        exit 1
-    fi
-    if [[ $n_files -gt 1 && $n_files -ne $n_tracks ]]
-    then
-        echo "the number of files in the cuesheet is not consistent with the number of tracks"
-        exit 1
+        local flac_count=$(ls -1 *.flac 2> /dev/null | wc -l)
+        local m4a_count=$(ls -1 *.m4a 2> /dev/null | wc -l)
+        local mp4_count=$(ls -1 *.mp4 2> /dev/null | wc -l)
+        local ape_count=$(ls -1 *.ape 2> /dev/null | wc -l)
+
+        n_files=$flac_count
+        n_tracks=$n_files
+        file_format=flac
+        
+        if [ $n_files -gt 0 ]
+        then
+            local infile=$(find . -iname "*.$file_format" | $sed_bin -n 1p)
+            $ffmpeg_bin -i "$infile" -y -f ffmetadata temp.txt &> /dev/null
+            performer=$(sed -n 's/^ARTIST=\(.*\)$/\1/p' temp.txt)
+            performer=$(capitalize $performer)
+            album_artist=$performer
+            album=$(sed -n 's/^ALBUM=\(.*\)$/\1/p' temp.txt)
+            album=$(capitalize $album)
+            genre=$(sed -n 's/^GENRE=\(.*\)$/\1/p' temp.txt)
+            genre=$(capitalize $genre)
+            year=$(sed -n 's/^DATE=\(.*\)$/\1/p' temp.txt)
+            comment=$(sed -n 's/^COMMENT=\(.*\)$/\1/p' temp.txt)
+
+            if [ -f "temp.txt" ]
+            then
+                rm temp.txt
+            fi
+        else
+            echo no file found
+            exit 1
+        fi
     fi
 
     if [ -z "$album_artist" ]
     then
-        album_artist=$($cueprint_bin temp.cue 2>/dev/null -d '%P\n')
-        album_artist=$(capitalize $album_artist)
-        if [ -z "$album_artist" ]
-        then
-            echo no album artist set by cuefile
-        fi
+        echo no album artist set by cuefile or file
     fi
     if [ -z "$album" ]
     then
-        album=$($cueprint_bin temp.cue 2>/dev/null -d '%T\n')
-        album=$(capitalize $album)
-        if [ -z "$album" ]
-        then
-            echo no album set by cuefile
-        fi
+        echo no album set by cuefile or file
     fi
     if [ -z "$genre" ]
     then
-        genre=$($cueprint_bin temp.cue 2>/dev/null -d '%G\n')
-        genre=$(capitalize $genre)
-        if [ -z "$genre" ]
-        then
-            echo no genre set by cuefile
-        fi
+        echo no genre set by cuefile or file
     fi
     if [ -z "$year" ]
     then
-        year=$($sed_bin -n 's/^DATE \([0-9]*\)[^0-9]*$/\1/p' temp.cue)
-        if [ -z "$year" ]
-        then
-            echo no year set by cuefile
-        fi
+        echo no year set by cuefile or file
     fi
-    if [ -z "$comment" ]
-    then
-        comment=$($sed_bin -n 's/^COMMENT "\(.*\)".*$/\1/p' temp.cue)
-    fi
-    if [ -f "temp.cue" ]
-    then
-        rm temp.cue
-    fi
+
     return 0
 }
 
@@ -312,7 +353,9 @@ function select_encoder()
         aac_tool_opt=$fdkaac_opt
     else
         echo no encoder has been selected
+        exit 1
     fi
+    return 0
 }
 
 function tag_converted_files()
@@ -360,41 +403,42 @@ function tag_converted_files()
             $mp4box_bin -itags cover="$cover" "$subdir$aac_file" &> /dev/null
         fi
     fi
+    return 0
 }
 
 cmdl_opt=$(getopt -n "$0" -o hc:y:g:a:p:k:b:q:d:n:m:ef --long "help,cover:,year:,genre:,album:,performer:,comment:,bitrate:,cuefile:,path:,disc:,discs:,apple,fdk" -- "$@")
 
 check_tools
 parse_cmdl_line
-#print_debug
 select_cuefile; op_mode=$?
 select_encoder
+get_album_tags $op_mode
+#print_debug
 
-if [ $op_mode -eq 0 ]
+subdir="$outpath$year - $album/"
+if [[ -n "$disc_idx" && -n "$disc_tot" ]]
 then
-    get_album_tags
-    subdir="$outpath$year - $album/"
-    if [[ -n "$disc_idx" && -n "$disc_tot" ]]
-    then
-        subdir="$subdir/CD$disc_idx/"
-    fi
-    mkdir -p "$subdir"
-    declare -i track
+    subdir="$subdir/CD$disc_idx/"
+fi
+mkdir -p "$subdir"
+declare -i track
 
-    if [ "$n_files" -eq "1" ]
+if [[ "$n_files" -eq "1" && $op_mode -eq 0 ]]
+then
+    infile=$relative_path$($sed_bin -n 's/^FILE "\(.*\)".*$/\1/p' "$cuefile")
+    if [ ! -f "$infile" ]
     then
-        infile=$relative_path$($sed_bin -n 's/^FILE "\(.*\)".*$/\1/p' "$cuefile")
-        if [ ! -f "$infile" ]
-        then
-            echo "the input file for the image does not exist (check the extension)"
-        fi
-        echo splitting the lossless image into wav tracks...
-        echo
-        $shntool_bin split -f "$cuefile" -d "$relative_path" -o wav -O always "$infile" &> /dev/null
+        echo "the input file for the image does not exist (check the extension)"
     fi
-    
-    for (( track=1; track<=$n_tracks; track++ ))
-    do
+    echo splitting the lossless image into wav tracks...
+    echo
+    $shntool_bin split -f "$cuefile" -d "$relative_path" -o wav -O always "$infile" &> /dev/null
+fi
+
+for (( track=1; track<=$n_tracks; track++ ))
+do
+    if [ $op_mode -eq 0 ]
+    then
         title=$($cueprint_bin "$cuefile" 2>/dev/null -t '%t\n' -n $track)
         title=$(capitalize $title)
         if [[ -n $album_artist && $compilation -eq 0 ]]
@@ -404,31 +448,50 @@ then
             performer=$($cueprint_bin "$cuefile" 2>/dev/null -t '%p\n' -n $track)
         fi
         performer=$(capitalize $performer)
-	    aac_file="$(printf "%02d" ${track}) - $(echo ${title}.m4a | $sed_bin 's/?/-/' | $sed_bin 's/\//-/')"
-        wav_file="split-track$(printf "%02d" ${track}).wav"
-        if [ "$n_files" -eq "$n_tracks" ]
+        if [ -z "$title" ]
         then
-            infile=$relative_path$($sed_bin -n 's/^FILE "\(.*\)".*$/\1/p' "$cuefile" | $sed_bin -n ${track}p)
-            if [ ! -f "$infile" ]
-            then
-                echo "the input file for track # $track does not exist (check the extension)"
-            fi
-            echo "converting track # $track to wav format..."
-            $ffmpeg_bin -y -i "$infile" "$relative_path$wav_file" &> /dev/null
+            echo no title set by cuefile
         fi
-
-        echo "converting track # $track to aac format..."
-        eval $aac_tool $aac_tool_opt &> /dev/null
-
-        echo "tagging track # $track"
-        tag_converted_files
-        
-        if [ -f "$relative_path$wav_file" ]
+    elif [ $op_mode -eq 2 ]
+    then
+        infile=$(find . -iname "*.$file_format" | $sed_bin -n ${track}p)
+        $ffmpeg_bin -i "$infile" -y -f ffmetadata temp.txt &> /dev/null
+        title=$(sed -n 's/^TITLE=\(.*\)$/\1/p' temp.txt)
+        title=$(capitalize $title)
+        if [ -f "temp.txt" ]
         then
-            rm "$relative_path$wav_file"
+            rm temp.txt
         fi
-        echo
-    done
-else
-    echo this more is currently not implemented
-fi
+        if [ -z "$title" ]
+        then
+            echo no title set by $file_format file
+        fi
+    fi
+    
+	aac_file="$(printf "%02d" ${track}) - $(echo ${title}.m4a | $sed_bin 's/?/-/' | $sed_bin 's/\//-/')"
+    wav_file="split-track$(printf "%02d" ${track}).wav"
+
+    if [[ "$n_files" -eq "$n_tracks" && $op_mode -eq 0 ]]
+    then
+        infile=$relative_path$($sed_bin -n 's/^FILE "\(.*\)".*$/\1/p' "$cuefile" | $sed_bin -n ${track}p)
+        if [ ! -f "$infile" ]
+        then
+            echo "the input file for track # $track does not exist (check the extension)"
+        fi
+    fi
+
+    echo "converting track # $track to wav format..."
+    $ffmpeg_bin -y -i "$infile" "$relative_path$wav_file" &> /dev/null
+
+    echo "converting track # $track to aac format..."
+    eval $aac_tool $aac_tool_opt &> /dev/null
+
+    echo "tagging track # $track"
+    tag_converted_files
+    
+    if [ -f "$relative_path$wav_file" ]
+    then
+        rm "$relative_path$wav_file"
+    fi
+    echo
+done
