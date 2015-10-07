@@ -289,7 +289,7 @@ function get_album_tags()
         local mp4_count=$(ls -1 *.mp4 2> /dev/null | wc -l)
         local ape_count=$(ls -1 *.ape 2> /dev/null | wc -l)
 
-        n_files=$flac_count
+        n_files=$(echo $flac_count | $sed_bin -n 's/\([0-9]\)/\1/p')
         n_tracks=$n_files
         file_format=flac
         
@@ -488,7 +488,7 @@ do
 
     echo "tagging track # $track"
     tag_converted_files
-    
+
     if [ -f "$relative_path$wav_file" ]
     then
         rm "$relative_path$wav_file"
