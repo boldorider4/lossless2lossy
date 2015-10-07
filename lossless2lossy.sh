@@ -283,14 +283,28 @@ function get_album_tags()
         fi
     elif [ $1 -eq 2 ]
     then
-        local flac_count=$(ls -1 *.flac 2> /dev/null | wc -l)
-        local m4a_count=$(ls -1 *.m4a 2> /dev/null | wc -l)
-        local mp4_count=$(ls -1 *.mp4 2> /dev/null | wc -l)
-        local ape_count=$(ls -1 *.ape 2> /dev/null | wc -l)
-
-        n_files=$(echo $flac_count | $sed_bin -n 's/\([0-9]\)/\1/p')
+        local flac_count=$(ls -1 *.flac 2> /dev/null | wc -l | $sed_bin -n 's/\( *[0-9] *\)/\1/p')
+        local m4a_count=$(ls -1 *.m4a 2> /dev/null | wc -l | $sed_bin -n 's/\( *[0-9] *\)/\1/p')
+        local mp4_count=$(ls -1 *.mp4 2> /dev/null | wc -l | $sed_bin -n 's/\( *[0-9] *\)/\1/p')
+        local ape_count=$(ls -1 *.ape 2> /dev/null | wc -l | $sed_bin -n 's/\( *[0-9] *\)/\1/p')
+        local file_format=flac
+        n_files=$flac_count
+        if [ $m4a_count -gt $flac_count ]
+        then
+            file_format=m4a
+            n_files=$m4a_count
+        fi
+        if [ $mp4_count -gt $m4a_count ]
+        then
+            file_format=mp4
+            n_files=$mp4_count
+        fi
+        if [ $ape_count -gt $mp4_count ]
+        then
+            file_format=ape
+            n_files=$ape_count
+        fi
         n_tracks=$n_files
-        file_format=flac
         
         if [ $n_files -gt 0 ]
         then
