@@ -433,6 +433,17 @@ select_encoder
 get_album_tags $op_mode
 #print_debug
 
+multiple_tracks=0
+multiple_tracks_with_cuefile=0
+if [ "$n_files" -eq "$n_tracks" ]
+then
+    multiple_tracks=1
+    if [ $op_mode -eq 0 ]
+    then
+        multiple_tracks_with_cuefile=1
+    fi
+fi
+
 subdir="$outpath$year - $album/"
 if [[ -n "$disc_idx" && -n "$disc_tot" ]]
 then
@@ -453,7 +464,7 @@ then
     $shntool_bin split -f "$cuefile" -d "$relative_path" -o wav -O always "$infile" &> /dev/null
 fi
 
-for (( track_idx=1; track<=$n_tracks; track++ ))
+for (( track_idx=1; track_idx<=$n_tracks; track_idx++ ))
 do
     if [ $op_mode -eq 0 ]
     then
@@ -477,12 +488,12 @@ do
         $ffmpeg_bin -i "$infile" -y -f ffmetadata temp.txt &> /dev/null
         title=$($sed_bin -n 's/^TITLE=\(.*\)$/\1/p' temp.txt)
         title=$(capitalize $title)
-	track=$($sed_bin -n 's/^TRACK=\([0-9][0-9]*\)$/\1/p' temp.txt)
+	    track=$($sed_bin -n 's/^TRACK=\([0-9][0-9]*\)$/\1/p' temp.txt)
         if [ -z "$track" ]
         then
-	    echo "the track information for $infile is missing"
-	    track=$track_idx
-	fi
+	        echo "the track information for $infile is missing"
+	        track=$track_idx
+	    fi
         if [ -f "temp.txt" ]
         then
             rm temp.txt
@@ -492,14 +503,14 @@ do
             echo no title set by $file_format file
         fi
     else
-	echo unsupported mode
+	    echo unsupported mode
 	exit 1
     fi
     
     aac_file="$(printf "%02d" ${track}) - $(echo ${title}.m4a | $sed_bin 's/?/-/' | $sed_bin 's/\//-/')"
     wav_file="split-track$(printf "%02d" ${track}).wav"
 
-    if [[ "$n_files" -eq "$n_tracks" && $op_mode -eq 0 ]]
+    if [ $multiple_tracks_with_cuefile -eq 1 ]
     then
         infile=$relative_path$($sed_bin -n 's/^FILE "\(.*\)".*$/\1/p' "$cuefile" | $sed_bin -n ${track}p)
         if [ ! -f "$infile" ]
@@ -508,8 +519,11 @@ do
         fi
     fi
 
-    echo "converting track # $track to wav format..."
-    $ffmpeg_bin -y -i "$infile" "$relative_path$wav_file" &> /dev/null
+    if [ $multiple_tracks -eq 1 ]
+    then
+        echo "converting track # $track to wav format..."
+        $ffmpeg_bin -y -i "$infile" "$relative_path$wav_file" &> /dev/null
+    fi
 
     echo "converting track # $track to aac format..."
     eval $aac_tool $aac_tool_opt &> /dev/null
