@@ -47,47 +47,64 @@ function check_tools()
 {
     local tools_missing=""
     local tools_missing_flag=0
+    local codecs_missing=""
+    local codecs_missing_flag=0
 
     if [ -z "$ack_bin" ]
     then
-	tools_missing+=" ack"
-	tools_missing_flag=1
+        tools_missing+=" ack"
+        tools_missing_flag=1
     fi
     if [ -z "$sed_bin" ]
     then
-	tools_missing+=" ssed"
-	tools_missing_flag=1
+        tools_missing+=" ssed"
+        tools_missing_flag=1
     fi
     if [ -z "$cueprint_bin" ]
     then
-	tools_missing+=" cuetools"
-	tools_missing_flag=1
+        tools_missing+=" cuetools"
+        tools_missing_flag=1
     fi
     if [ -z "$ffmpeg_bin" ]
     then
-	tools_missing+=" ffmpeg"
-	tools_missing_flag=1
+        tools_missing+=" ffmpeg"
+        tools_missing_flag=1
     fi
     if [ -z "$shntool_bin" ]
     then
-	tools_missing+=" shntool"
-	tools_missing_flag=1
+        tools_missing+=" shntool"
+        tools_missing_flag=1
     fi
     if [[ -z "$afconvert_bin" && -z "$fdkaac_bin" ]]
     then
-	tools_missing+=" [afconvert|fdkaac]"
-	tools_missing_flag=1
+        tools_missing+=" [afconvert|fdkaac]"
+        tools_missing_flag=1
     fi
     if [[ -z "$atomicParsley_bin" && -z "$mp4box_bin" ]]
     then
-	tools_missing+=" [AtomicParsley|mp4box]"
-	tools_missing_flag=1
+        tools_missing+=" [AtomicParsley|mp4box]"
+        tools_missing_flag=1
+    fi
+    if [ -z "$(which flac)" ]
+    then
+        codecs_missing+=" flac"
+        codecs_missing_flag=1
+    fi
+    if [ -z "$(which mac)" ]
+    then
+        codecs_missing+=" mac"
+        codecs_missing_flag=1
     fi
 
     if [ $tools_missing_flag -eq 1 ]
     then
-	echo the missing tools are:$tools_missing
-	exit 1
+        echo the missing tools are:$tools_missing
+        exit 1
+    fi
+    if [ $codecs_missing_flag -eq 1 ]
+    then
+        echo the missing tools are:$codecs_missing
+        exit 1
     fi
 }
 
