@@ -129,7 +129,6 @@ function parse_cmdl_line()
     do
         case "$1" in
             -h|--help)
-                echo "usage"
                 echo "./flac2itunes.sh [-hcygapkbqnmef] [--help|cover|year|genre|album|performer|comment|bitrate|cuefile|disc|discs|apple|fdk]"
                 echo "    -h | --help prints this help"
                 echo "    -c | --cover sets the cover file"
