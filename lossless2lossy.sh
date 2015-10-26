@@ -9,7 +9,7 @@ shntool_bin=$(which shntool)
 afconvert_bin=$(which afconvert)
 fdkaac_bin=$(which fdkaac)
 atomicParsley_bin=$(which AtomicParsley)
-mp4box_bin=$(which mp4box)
+mp4box_bin=$(which MP4Box)
 
 # encoding options
 bitrate="256000"
