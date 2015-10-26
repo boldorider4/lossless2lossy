@@ -99,12 +99,15 @@ function check_tools()
     if [ $tools_missing_flag -eq 1 ]
     then
         echo the missing tools are:$tools_missing
-        exit 1
     fi
     if [ $codecs_missing_flag -eq 1 ]
     then
         echo the missing codecs are:$codecs_missing
-        exit 1
+    fi
+
+    if [[ $tools_missing_flag -eq 1 || $codecs_missing_flag -eq 1 ]]
+    then
+	exit 1
     fi
 }
 
