@@ -95,6 +95,11 @@ function check_tools()
         codecs_missing+=" mac"
         codecs_missing_flag=1
     fi
+    if [ -z "$(which wvunpack)" ]
+    then
+        codecs_missing+=" wvunpack"
+        codecs_missing_flag=1
+    fi
 
     if [ $tools_missing_flag -eq 1 ]
     then
