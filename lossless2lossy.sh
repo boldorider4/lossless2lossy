@@ -103,7 +103,7 @@ function check_tools()
     fi
     if [ $codecs_missing_flag -eq 1 ]
     then
-        echo the missing tools are:$codecs_missing
+        echo the missing codecs are:$codecs_missing
         exit 1
     fi
 }
