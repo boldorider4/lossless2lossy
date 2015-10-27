@@ -49,6 +49,8 @@ function check_tools()
     local tools_missing_flag=0
     local codecs_missing=""
     local codecs_missing_flag=0
+    local libraries_suggested=""
+    local libraries_suggested_flag=0
 
     if [ -z "$ack_bin" ]
     then
@@ -100,6 +102,12 @@ function check_tools()
         codecs_missing+=" wvunpack"
         codecs_missing_flag=1
     fi
+    fdklib=$(find $(echo "$LIBRARY_PATH:$LD_LIBRARY_PATH" | tr ":" "\n") -maxdepth 1 -name 'libfdk-aac.so' -o -name 'libfdk-aac.dylib')
+    if [ -z "$fdklib" ]
+    then
+        libraries_suggested+=" libfdk-aac(for fdkaac)"
+        libraries_suggested_flag=1
+    fi
 
     if [ $tools_missing_flag -eq 1 ]
     then
@@ -109,10 +117,14 @@ function check_tools()
     then
         echo the missing codecs are:$codecs_missing
     fi
+    if [ $libraries_suggested_flag -eq 1 ]
+    then
+        echo "these recommended libraries were not found in your library path:$libraries_suggested"
+    fi
 
     if [[ $tools_missing_flag -eq 1 || $codecs_missing_flag -eq 1 ]]
     then
-	exit 1
+        exit 1
     fi
 }
 
