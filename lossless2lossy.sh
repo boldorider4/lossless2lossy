@@ -494,6 +494,7 @@ then
     if [ ! -f "$infile" ]
     then
         echo "the input file for the image does not exist (check the extension)"
+        exit 1
     fi
     echo splitting the lossless image into wav tracks...
     echo
@@ -552,6 +553,7 @@ do
         if [ ! -f "$infile" ]
         then
             echo "the input file for track # $track does not exist (check the extension)"
+            exit 1
         fi
     fi
 
