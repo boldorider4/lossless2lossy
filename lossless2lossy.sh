@@ -499,6 +499,10 @@ then
     echo splitting the lossless image into wav tracks...
     echo
     $shntool_bin split -f "$cuefile" -d "$relative_path" -o wav -O always "$infile" &> /dev/null
+    if [ -f "split-track00.wav" ]
+    then
+        rm "split-track00.wav"
+    fi
 fi
 
 for (( track_idx=1; track_idx<=$n_tracks; track_idx++ ))
