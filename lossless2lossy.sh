@@ -270,7 +270,7 @@ function get_album_tags()
 {
     if [ $1 -eq 0 ]
     then
-        cat "$cuefile" | $sed_bin 's/^REM //' >> temp.cue
+        cat "$cuefile" | $sed_bin 's/^REM //' > temp.cue
 
         n_tracks=$($cueprint_bin temp.cue 2> /dev/null -d '%N\n')
         if [ $n_tracks -lt 1 ]
@@ -307,7 +307,7 @@ function get_album_tags()
         fi
         if [ -z "$year" ]
         then
-            year=$($sed_bin -n 's/^DATE \([0-9]*\)[^0-9]*$/\1/p' temp.cue)
+            year=$($sed_bin -n 's/^DATE "\?\([0-9]*\)"\?[^0-9]*$/\1/p' temp.cue)
         fi
         if [ -z "$comment" ]
         then
