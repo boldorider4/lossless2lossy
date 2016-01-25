@@ -355,7 +355,7 @@ function get_album_tags()
             genre=$(capitalize $genre)
             year=$($sed_bin -n 's/^DATE=\([0-9][0-9]*\)$/\1/p' temp.txt)
             comment=$($sed_bin -n 's/^COMMENT=\(.*\)$/\1/p' temp.txt)
-            
+
             if [ -f "temp.txt" ]
             then
                 rm temp.txt
@@ -529,10 +529,10 @@ do
         $ffmpeg_bin -i "$infile" -y -f ffmetadata temp.txt &> /dev/null
         title=$($sed_bin -n 's/^TITLE=\(.*\)$/\1/p' temp.txt)
         title=$(capitalize $title)
-        track=$($sed_bin -n 's/^TRACK=\([0-9]\+\)$/\1/p' temp.txt)
+        track=$($sed_bin -n 's/^TRACK=\([0-9]\+\)$/\1/p' temp.txt | $sed_bin -n 's/^0\?//p')
         if [ "$track" == "0" ]
         then
-            track=$($sed_bin -n 's/^track=\([0-9]\+\)$/\1/p' temp.txt)
+            track=$($sed_bin -n 's/^track=\([0-9]\+\)$/\1/p' temp.txt | $sed_bin -n 's/^0\?//p')
         fi
         if [ -z "$track" ]
         then
