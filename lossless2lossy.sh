@@ -22,24 +22,24 @@ use_atomicparsley=0
 
 function print_debug()
 {
-    echo $album
-    echo $album_artist
-    echo $performer
-    echo $year
-    echo $genre
-    echo $comment
-    echo $bitrate
-    echo $cuefile
-    echo $cover
-    echo $n_files
-    echo $n_tracks
+    echo album $album
+    echo album_artist $album_artist
+    echo performer $performer
+    echo year $year
+    echo genre $genre
+    echo comment $comment
+    echo bitrate $bitrate
+    echo cuefile $cuefile
+    echo cover $cover
+    echo n_files $n_files
+    echo n_tracks $n_tracks
     if [ -n "$disc_idx" ]
     then
-        echo $disc_idx
+        echo disc_idx $disc_idx
     fi
     if [ -n "$disc_tot" ]
     then
-        echo $disc_tot
+        echo disc_tot $disc_tot
     fi
 }
 
@@ -323,7 +323,7 @@ function get_album_tags()
         local m4a_count=$(ls -1 *.m4a 2> /dev/null | wc -l | $sed_bin -n 's/\( *[0-9] *\)/\1/p')
         local mp4_count=$(ls -1 *.mp4 2> /dev/null | wc -l | $sed_bin -n 's/\( *[0-9] *\)/\1/p')
         local ape_count=$(ls -1 *.ape 2> /dev/null | wc -l | $sed_bin -n 's/\( *[0-9] *\)/\1/p')
-        local file_format=flac
+        file_format=flac
         n_files=$flac_count
         if [ $m4a_count -gt $flac_count ]
         then
@@ -355,7 +355,7 @@ function get_album_tags()
             genre=$(capitalize $genre)
             year=$($sed_bin -n 's/^DATE=\([0-9][0-9]*\)$/\1/p' temp.txt)
             comment=$($sed_bin -n 's/^COMMENT=\(.*\)$/\1/p' temp.txt)
-
+            
             if [ -f "temp.txt" ]
             then
                 rm temp.txt
@@ -365,7 +365,7 @@ function get_album_tags()
             exit 1
         fi
     else
-	echo unsupported mode
+	    echo unsupported mode
 	exit 1
     fi
 
@@ -525,11 +525,15 @@ do
         fi
     elif [ $op_mode -eq 2 ]
     then
-        infile=$(find . -iname "*.$file_format" | $sed_bin -n ${track}p)
+        infile=$(find . -iname "*.$file_format" | $sed_bin -n ${track_idx}p)
         $ffmpeg_bin -i "$infile" -y -f ffmetadata temp.txt &> /dev/null
         title=$($sed_bin -n 's/^TITLE=\(.*\)$/\1/p' temp.txt)
         title=$(capitalize $title)
-	    track=$($sed_bin -n 's/^TRACK=\([0-9][0-9]*\)$/\1/p' temp.txt)
+        track=$($sed_bin -n 's/^TRACK=\([0-9]\+\)$/\1/p' temp.txt)
+        if [ "$track" == "0" ]
+        then
+            track=$($sed_bin -n 's/^track=\([0-9]\+\)$/\1/p' temp.txt)
+        fi
         if [ -z "$track" ]
         then
 	        echo "the track information for $infile is missing"
