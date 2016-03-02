@@ -435,7 +435,7 @@ function tag_converted_files()
         fi
         eval $tag_cmdl &> /dev/null
     else
-        $mp4box_bin -itags tracknum=$track/$n_tracks "$subdir$aac_file" &> /dev/null
+        $mp4box_bin -itags tracknum="$track/$n_tracks" "$subdir$aac_file" &> /dev/null
         $mp4box_bin -itags name="${title}" "$subdir$aac_file" &> /dev/null
         $mp4box_bin -itags artist="$performer" "$subdir$aac_file" &> /dev/null
         $mp4box_bin -itags album="$album" "$subdir$aac_file" &> /dev/null
@@ -534,7 +534,7 @@ do
         then
             track=$($sed_bin -n 's/^track=\([0-9]\+\)$/\1/p' temp.txt | $sed_bin -n 's/^0\?//p')
         fi
-        if [ -z "$track" ]
+        if [[ -z "$track" || "$track" == "0" ]]
         then
 	        echo "the track information for $infile is missing"
 	        track=$track_idx
