@@ -581,7 +581,9 @@ do
 done
 
 # final cleanup
-if [ -f "split*.wav" ]
+declare -i residue_count
+residue_count=$(find . -name 'split*.wav' | wc -l)
+if [ $residue_count -gt 0 ]
 then
     rm "split*.wav"
 fi
