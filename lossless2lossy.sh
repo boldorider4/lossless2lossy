@@ -273,6 +273,7 @@ function get_album_tags()
         cat "$cuefile" | $sed_bin 's/^REM //' > temp.cue
 
         n_tracks=$($cueprint_bin temp.cue 2> /dev/null -d '%N\n')
+        echo n_tracks $n_tracks
         if [ $n_tracks -lt 1 ]
         then
             echo "no track detected in cuefile"
