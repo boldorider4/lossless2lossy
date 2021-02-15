@@ -309,20 +309,57 @@ def get_album_tags_from_dir(config):
     return tag_dict
 
 
-def compose_converter_cmd(config, tags):
+def compose_converter_cmd(config, tags, dir_name):
+    infile = tags['infile']
+    outfile = os.path.join(dir_name, tags['outfile'])
+
     if config.encoder == 'afconvert_bin':
         cmd = config.encode_tools[config.encoder].copy()
         cmd.append('-b')
         cmd.append(config.args.bitrate)
-        cmd.append(tags['infile'])
-        cmd.append(tags['outfile'])
+        cmd.append(infile)
+        cmd.append(outfile)
     elif config.encoder == 'ffmpeg_bin':
         cmd = config.encode_tools[config.encoder].copy()
-        cmd.append(tags['infile'])
-        cmd.append(tags['outfile'])
+        cmd.append(infile)
+        cmd.append(outfile)
     else:
         raise NotImplementedError()
     return cmd
+
+
+def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
+    outfile = os.path.join(dir_name, tags['outfile'])
+
+    cmd = config.other_tools[config.tagger]
+    if config.tagger == 'atomicparsley_bin':
+        cmd.append('--tracknum')
+        cmd.append('"' + track + '/' + n_tracks + '"')
+        cmd.append('--title')
+        cmd.append(tags['title'])
+        cmd.append('--artist')
+        cmd.apppend(tags['artist'])
+        cmd.append('--album')
+        cmd.append(tags['album'])
+        cmd.append('--genre')
+        cmd.append(tags['genre'])
+        cmd.append('--year')
+        cmd.append(tags['year'])
+        cmd.append('--comment')
+        cmd.append(tags['comment'])
+        if n_discs < 2 and (config.args.discs is None or config.args.discs < 2):
+            cmd.append('--disk')
+            if config.args.disc is not None:
+                disc = config.args.disc
+            if config.args.discs is not None:
+                n_discs = config.args.discs
+            cmd.append('"' + disc + '/' + n_discs + '"')
+        if config.args.cover is not None:
+            cmd.append('--artwork')
+            cmd.append(config.args.cover)
+        cmd.append(outfile)
+    else:
+        raise NotImplementedError()
 
 
 def convert_files(album_tags, config):
@@ -337,10 +374,28 @@ def convert_files(album_tags, config):
     except:
         os.mkdir(dir_name)
 
+    n_discs = len(album_tags)
     for disc, tracktags in album_tags.items():
+        n_tracks = len(tracktags)
         for track, tags in tracktags.items():
-            convert_stdout = subprocess.Popen(compose_converter_cmd(config, tags),
-                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+            print()
+            print('converting track {}/{} of disc {}/{}...'.format(track, n_tracks, disc, n_discs))
+            print('cmd line is ')
+            print()
+
+            converter_cmd = compose_converter_cmd(config, tags, dir_name)
+            output_cmd = ''
+            for param in converter_cmd:
+                output_cmd.append(param + ' ')
+            print(output_cmd)
+            convert_stdout = subprocess.Popen(converter_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+
+            tagger_cmd = compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name)
+            output_cmd = ''
+            for param in tagger_cmd:
+                output_cmd.append(param + ' ')
+            print(output_cmd)
+            tagging_stdout = subprocess.Popen(tagger_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
 
 
 def main():
