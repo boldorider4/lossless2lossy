@@ -118,23 +118,29 @@ def get_album_tags_from_cuefile(cuefile, config):
 
     n_track = None
     album = None
-    genre = None
+    global_artist = None
+    global_genre = None
     year = None
 
     for line in cue_info.readlines():
         n_tracks_match = re.match(r'^ *\t*no. of tracks: *\t*([0-9]+) *$', line.decode('utf-8'), re.IGNORECASE)
-        if n_tracks_match is not None:
+        if n_tracks_match is not None and n_track is None:
             n_track = int(n_tracks_match.group(1))
             continue
 
+        artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+        if artist_match is not None and global_artist is None:
+            global_artist = artist_match.group(1)
+            continue
+
         album_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-        if album_match is not None:
+        if album_match is not None and album is None:
             album = album_match.group(1)
             continue
 
         genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-        if genre_match is not None:
-            genre = genre_match.group(1)
+        if genre_match is not None and global_genre is None:
+            global_genre = genre_match.group(1)
             continue
 
     if n_track is None:
@@ -153,10 +159,13 @@ def get_album_tags_from_cuefile(cuefile, config):
 
         artist = None
         title = None
+        genre = None
         for line in cue_info.readlines():
             artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
             if artist_match is not None:
                 artist = artist_match.group(1)
+                if artist == '':
+                    artist = global_artist
                 continue
 
             title_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
@@ -164,11 +173,12 @@ def get_album_tags_from_cuefile(cuefile, config):
                 title = title_match.group(1)
                 continue
 
-            if genre is None:
-                genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-                if genre_match is not None:
-                    genre = genre_match.group(1)
-                    continue
+            genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            if genre_match is not None:
+                genre = genre_match.group(1)
+                if genre == '':
+                    genre = global_genre
+                continue
 
         track_tag_dict = dict()
         track_tag_dict['artist'] = artist
