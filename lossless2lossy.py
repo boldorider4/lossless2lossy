@@ -118,7 +118,6 @@ def get_album_tags_from_cuefile(cuefile, config):
     n_track = None
     album = None
     genre = None
-    # TODO: parse year from cue file
     year = None
 
     for line in cue_info.readlines():
@@ -139,6 +138,13 @@ def get_album_tags_from_cuefile(cuefile, config):
 
     if n_track is None:
         return tag_dict
+
+    with open(cuefile) as cuefile_fd:
+        for cuefile_line in cuefile_fd.readlines():
+            year_match = re.match(r'^ *\t*(REM )?DATE *\t*([0-9]*) *$', cuefile_line, re.IGNORECASE)
+            if year_match is not None:
+                year = int(year_match.group(2))
+                break
 
     for track in range(1, n_track+1):
         cue_info = subprocess.Popen([config.other_tools['cueprint_bin'], cuefile, '-n', str(track)],
