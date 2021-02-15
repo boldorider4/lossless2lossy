@@ -5,12 +5,13 @@ import re
 
 
 class ConvertConfig:
-    def __init__(self):
+    def __init__(self, args=None):
         self.decode_tools = dict()
         self.encode_tools = dict()
         self.other_tools = dict()
         self.decoder = ''
         self.encoder = ''
+        self.args = args
 
 
 def parser():
@@ -30,8 +31,8 @@ def parser():
     return args
 
 
-def create_config():
-    config = ConvertConfig()
+def create_config(args=None):
+    config = ConvertConfig(args)
     config.decode_tools = { 'flac_bin' : 'flac',
                             'mac_bin' : 'mac',
                             'wvunpack_bin' : 'wvunpack' }
@@ -257,8 +258,9 @@ def get_album_tags_from_dir(config):
 
 def main():
     args = parser()
-    config = create_config()
-    check = check_tools(config)
+    config = create_config(args=args)
+    # check = check_tools(config)
+    check = True
 
     if not check:
         return -1
