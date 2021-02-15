@@ -128,30 +128,38 @@ def get_album_tags_from_cuefile(cuefile, config):
             n_track = int(n_tracks_match.group(1))
             continue
 
-        artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-        if artist_match is not None and global_artist is None:
-            global_artist = artist_match.group(1)
-            continue
+        if config.args.performer is None:
+            artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            if artist_match is not None and global_artist is None:
+                global_artist = artist_match.group(1)
+                continue
 
-        album_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-        if album_match is not None and album is None:
-            album = album_match.group(1)
-            continue
+        if config.args.album is None:
+            album_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            if album_match is not None and album is None:
+                album = album_match.group(1)
+                continue
+        else:
+            album = config.args.album
 
-        genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-        if genre_match is not None and global_genre is None:
-            global_genre = genre_match.group(1)
-            continue
+        if config.args.genre is None:
+            genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            if genre_match is not None and global_genre is None:
+                global_genre = genre_match.group(1)
+                continue
 
     if n_track is None:
         return tag_dict
 
-    with open(cuefile) as cuefile_fd:
-        for cuefile_line in cuefile_fd.readlines():
-            year_match = re.match(r'^ *\t*(REM )?DATE *\t*([0-9]*) *$', cuefile_line, re.IGNORECASE)
-            if year_match is not None:
-                year = int(year_match.group(2))
-                break
+    if config.args.year is None:
+        with open(cuefile) as cuefile_fd:
+            for cuefile_line in cuefile_fd.readlines():
+                year_match = re.match(r'^ *\t*(REM )?DATE *\t*([0-9]*) *$', cuefile_line, re.IGNORECASE)
+                if year_match is not None:
+                    year = int(year_match.group(2))
+                    break
+    else:
+        year = config.args.year
 
     for track in range(1, n_track+1):
         cue_info = subprocess.Popen([config.other_tools['cueprint_bin'], cuefile, '-n', str(track)],
@@ -162,24 +170,30 @@ def get_album_tags_from_cuefile(cuefile, config):
         genre = None
         for line in cue_info.readlines():
             # 'perfomer' is a mispelling due to a bug in cueprint
-            artist_match = re.match(r'^ *\t*perfomer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-            if artist_match is not None:
-                artist = artist_match.group(1)
-                if artist == '':
-                    artist = global_artist
-                continue
+            if config.args.performer is None:
+                artist_match = re.match(r'^ *\t*perfomer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+                if artist_match is not None:
+                    artist = artist_match.group(1)
+                    if artist == '':
+                        artist = global_artist
+                    continue
+            else:
+                artist = config.args.performer
 
             title_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
             if title_match is not None:
                 title = title_match.group(1)
                 continue
 
-            genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
-            if genre_match is not None:
-                genre = genre_match.group(1)
-                if genre == '':
-                    genre = global_genre
-                continue
+            if config.args.genre is None:
+                genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+                if genre_match is not None:
+                    genre = genre_match.group(1)
+                    if genre == '':
+                        genre = global_genre
+                    continue
+            else:
+                genre = config.args.genre
 
         track_tag_dict = dict()
         track_tag_dict['artist'] = artist
@@ -216,20 +230,30 @@ def get_album_tags_from_dir(config):
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE).stderr
 
             for line in decode_stderr.readlines():
-                artist_match = re.match(r'^ +ARTIST +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
-                if artist_match is not None:
-                    artist = artist_match.group(1)
-                    continue
+                if config.args.performer is None:
+                    artist_match = re.match(r'^ +ARTIST +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                    if artist_match is not None:
+                        artist = artist_match.group(1)
+                        continue
+                else:
+                    artist = config.args.performer
 
-                album_match = re.match(r'^ +ALBUM +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
-                if album_match is not None:
-                    album = album_match.group(1)
-                    continue
-                year_match = re.match(r' +DATE +: +([0-9][0-9][0-9][0-9]).?[0-9]?.?[0-9]?',
-                                      line.decode('utf-8'), re.IGNORECASE) 
-                if year_match is not None:
-                    year = int(year_match.group(1))
-                    continue
+                if config.args.album is None:
+                    album_match = re.match(r'^ +ALBUM +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                    if album_match is not None:
+                        album = album_match.group(1)
+                        continue
+                else:
+                    album = config.args.album
+
+                if config.args.year is None:
+                    year_match = re.match(r' +DATE +: +([0-9][0-9][0-9][0-9]).?[0-9]?.?[0-9]?',
+                                          line.decode('utf-8'), re.IGNORECASE)
+                    if year_match is not None:
+                        year = int(year_match.group(1))
+                        continue
+                else:
+                    year = config.args.year
 
                 disctotal_match = re.match(r'^ +DISCTOTAL +: +([0-9]+)$', line.decode('utf-8'),
                                            re.IGNORECASE)
@@ -242,10 +266,13 @@ def get_album_tags_from_dir(config):
                     title = title_match.group(1)
                     continue
 
-                genre_match = re.match(r'^ +GENRE +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
-                if genre_match is not None:
-                    genre = genre_match.group(1)
-                    continue
+                if config.args.genre is None:
+                    genre_match = re.match(r'^ +GENRE +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                    if genre_match is not None:
+                        genre = genre_match.group(1)
+                        continue
+                else:
+                    genre = config.args.genre
 
                 track_match = re.match(r'^ +track +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
                 if track_match is not None:
