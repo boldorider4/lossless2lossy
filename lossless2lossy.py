@@ -197,11 +197,11 @@ def get_album_tags_from_cuefile(cuefile, config):
                 genre = config.args.genre
 
         track_tag_dict = dict()
-        track_tag_dict['artist'] = artist
-        track_tag_dict['album'] = album
+        track_tag_dict['artist'] = artist.title()
+        track_tag_dict['album'] = album.title()
         track_tag_dict['year'] = year
-        track_tag_dict['title'] = title
-        track_tag_dict['genre'] = genre
+        track_tag_dict['title'] = title.title()
+        track_tag_dict['genre'] = genre.title()
         if 1 not in tag_dict:
             tag_dict[1] = dict()
         tag_dict[1][track] = track_tag_dict
@@ -283,11 +283,11 @@ def get_album_tags_from_dir(config):
             raise NotImplementedError()
 
         track_tag_dict = dict()
-        track_tag_dict['artist'] = artist
-        track_tag_dict['album'] = album
+        track_tag_dict['artist'] = artist.title()
+        track_tag_dict['album'] = album.title()
         track_tag_dict['year'] = year
-        track_tag_dict['title'] = title
-        track_tag_dict['genre'] = genre
+        track_tag_dict['title'] = title.title()
+        track_tag_dict['genre'] = genre.title()
         if disctotal not in tag_dict:
             tag_dict[disctotal] = dict()
         tag_dict[disctotal][track] = track_tag_dict
