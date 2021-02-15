@@ -161,7 +161,8 @@ def get_album_tags_from_cuefile(cuefile, config):
         title = None
         genre = None
         for line in cue_info.readlines():
-            artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            # 'perfomer' is a mispelling due to a bug in cueprint
+            artist_match = re.match(r'^ *\t*perfomer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
             if artist_match is not None:
                 artist = artist_match.group(1)
                 if artist == '':
