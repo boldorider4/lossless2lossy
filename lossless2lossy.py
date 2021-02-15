@@ -36,8 +36,9 @@ def create_config(args=None):
     config.decode_tools = { 'flac_bin' : 'flac',
                             'mac_bin' : 'mac',
                             'wvunpack_bin' : 'wvunpack' }
-    config.encode_tools = { 'ffmpeg_bin' : 'ffmpeg',
-                            'afconvert_bin' : 'afconvert' }
+    config.encode_tools = { 'ffmpeg_bin' : ['ffmpeg'],
+                            'afconvert_bin' : ['afconvert', '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
+                                               '127', '-s', '2', '--soundcheck-generate', '-b'] }
     config.other_tools = { 'ack_bin' : 'ack',
                            'ssed_bin' : 'ssed',
                            'shntool_bin' : 'shntool',
