@@ -156,7 +156,7 @@ def get_album_tags_from_cuefile(cuefile, config):
             for cuefile_line in cuefile_fd.readlines():
                 year_match = re.match(r'^ *\t*(REM )?DATE *\t*([0-9]*) *$', cuefile_line, re.IGNORECASE)
                 if year_match is not None:
-                    year = int(year_match.group(2))
+                    year = year_match.group(2)
                     break
     else:
         year = config.args.year
