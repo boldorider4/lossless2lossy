@@ -11,6 +11,7 @@ class ConvertConfig:
         self.other_tools = dict()
         self.decoder = ''
         self.encoder = ''
+        self.tagger = ''
         self.args = args
 
 
@@ -44,9 +45,11 @@ def create_config(args=None):
                            'shntool_bin' : 'shntool',
                            'mp4box_bin' : 'mp4box',
                            'ffmpeg_bin' : 'ffmpeg',
-                           'cueprint_bin' : 'cueprint' }
+                           'cueprint_bin' : 'cueprint',
+                           'atomicparsley_bin' : ['AtomicParsley', '--overWrite'] }
     config.decoder = 'ffmpeg_bin'
     config.encoder = 'afconvert_bin'
+    config.tagger = 'atomicparsley_bin'
     return config
 
 
