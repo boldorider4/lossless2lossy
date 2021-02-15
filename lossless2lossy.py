@@ -39,7 +39,7 @@ def create_config(args=None):
                             'wvunpack_bin' : 'wvunpack' }
     config.encode_tools = { 'ffmpeg_bin' : ['ffmpeg'],
                             'afconvert_bin' : ['afconvert', '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
-                                               '127', '-s', '2', '--soundcheck-generate', '-b'] }
+                                               '127', '-s', '2', '--soundcheck-generate'] }
     config.other_tools = { 'ack_bin' : 'ack',
                            'ssed_bin' : 'ssed',
                            'shntool_bin' : 'shntool',
@@ -301,6 +301,7 @@ def get_album_tags_from_dir(config):
 def compose_converter_cmd(config, tags):
     if config.encoder == 'afconvert_bin':
         cmd = config.encode_tools[config.encoder].copy()
+        cmd.append('-b')
         cmd.append(config.args.bitrate)
         cmd.append(tags['infile'])
         cmd.append(tags['outfile'])
