@@ -295,6 +295,39 @@ def get_album_tags_from_dir(config):
     return tag_dict
 
 
+def compose_converter_cmd(config, tags):
+    if config.encoder == 'afconvert_bin':
+        cmd = config.encode_tools[config.encoder].copy()
+        cmd.append(config.args.bitrate)
+        cmd.append(tags['infile'])
+        cmd.append(tags['outfile'])
+    elif config.encoder == 'ffmpeg_bin':
+        cmd = config.encode_tools[config.encoder].copy()
+        cmd.append(tags['infile'])
+        cmd.append(tags['outfile'])
+    else:
+        raise NotImplementedError()
+    return cmd
+
+
+def convert_files(album_tags, config):
+    if config.args.path is not None and os.path.isdir(config.args.path):
+        dir_name = config.args.path
+    else:
+        dir_name = os.getcwd()
+
+    dir_name = os.path.join(dir_name, config.args.album)
+    try:
+        os.stat(dir_name)
+    except:
+        os.mkdir(dir_name)
+
+    for disc, tracktags in album_tags.items():
+        for track, tags in tracktags.items():
+            convert_stdout = subprocess.Popen(compose_converter_cmd(config, tags),
+                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+
+
 def main():
     args = parser()
     config = create_config(args=args)
@@ -315,7 +348,7 @@ def main():
     elif ret[0] == 0:
         album_tags = get_album_tags_from_cuefile(ret[1], config)
 
-    print(album_tags)
+    convert_files(album_tags, config)
     return 0
 
 
