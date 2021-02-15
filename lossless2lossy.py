@@ -53,20 +53,20 @@ def check_tools(config):
     # check other tools
     for tool in config.other_tools.values():
         proc = subprocess.Popen(['which',tool],stdout=subprocess.PIPE)
-        if len(proc.stdout.readlines()) == b'':
+        if len(proc.stdout.readlines()) == 0:
             print('{} is missing and is required'.format(tool))
             return False        
 
     # check decode tools
     is_any_tool_installed = False
-    for tool in config.encode_tools.values():
+    for tool in config.decode_tools.values():
         proc = subprocess.Popen(['which',tool],stdout=subprocess.PIPE)
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
-        for tool in encode_tools.values():
+        for tool in config.decode_tools.values():
             error_msg += tool + ' '
-        error_msg += 'are installed'
+        error_msg += 'is installed'
         print(error_msg)
         return False
 
@@ -77,7 +77,7 @@ def check_tools(config):
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
-        for tool in encode_tools.values():
+        for tool in config.encode_tools.values():
             error_msg += tool + ' '
         error_msg += 'are installed'
         print(error_msg)
@@ -88,7 +88,6 @@ def check_tools(config):
 
 def select_cuefile(cuefile=None):
     cwd = os.getcwd()
-    continue_flag = False
     if cuefile:
         if os.path.exists(os.path.join(cwd, cuefile)):
             return (0, cuefile)
@@ -99,8 +98,9 @@ def select_cuefile(cuefile=None):
         print('guessing cufile to use...')
         candidates = [f for f in os.listdir(cwd) if f.endswith('.cue')]
         if len(candidates) == 1:
-            print('found cuefile {}'.format(os.path.join(cwd, cuefile)))
-            return (0, candidate[0])
+            cuefile = os.path.join(cwd, candidates[0])
+            print('found cuefile {}'.format(cuefile))
+            return (0, cuefile)
         elif len(candidates) > 1:
             print('ambiguous cuefiles...')
             return (-1, '')
@@ -129,7 +129,7 @@ def get_album_tags_from_cuefile(cuefile, config):
 
         album_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
         if album_match is not None:
-            album_track = album_match.group(1)
+            album = album_match.group(1)
             continue
 
         genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
