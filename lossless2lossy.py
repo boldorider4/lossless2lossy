@@ -146,8 +146,31 @@ def slugify(value, allow_unicode=False):
     return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 
+def detect_cuefile_encoding(cuefile):
+    encoding = 'utf-8'
+    cuefile_fd = open(cuefile, 'r', encoding='utf-8')
+    try:
+        cuefile_fd.readlines()
+        cuefile_fd.close()
+    except UnicodeDecodeError:
+        cuefile_fd.close()
+        cuefile_fd = open(cuefile, 'r', encoding='cp1252')
+        cuefile_fd.readlines()
+        cuefile_fd.close()
+        encoding = 'cp1252'
+    return encoding
+
+
+def fix_coding_issue(line, encoding):
+    decoded_line = line.decode(encoding)
+    if encoding == 'cp1252':
+        decoded_line = decoded_line.replace('’', '\'', )
+    return decoded_line
+
+
 def get_album_tags_from_cuefile(cuefile, config):
     tag_dict = dict()
+    encoding = config.cuefile_encoding
 
     cue_info = subprocess_popen([config.other_tools['cueprint_bin'], cuefile]).stdout
 
@@ -158,19 +181,21 @@ def get_album_tags_from_cuefile(cuefile, config):
     year = None
 
     for line in cue_info.readlines():
-        n_tracks_match = re.match(r'^ *\t*no. of tracks: *\t*([0-9]+) *$', line.decode('utf-8'), re.IGNORECASE)
+        decoded_line = fix_coding_issue(line, encoding)
+
+        n_tracks_match = re.match(r'^ *\t*no. of tracks: *\t*([0-9]+) *$', decoded_line, re.IGNORECASE)
         if n_tracks_match is not None and n_track is None:
             n_track = int(n_tracks_match.group(1))
             continue
 
         if config.args.performer is None:
-            artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', decoded_line, re.IGNORECASE)
             if artist_match is not None and global_artist is None:
                 global_artist = artist_match.group(1)
                 continue
 
         if config.args.album is None:
-            album_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            album_match = re.match(r'^ *\t*title: *\t*(.*) *$', decoded_line, re.IGNORECASE)
             if album_match is not None and album is None:
                 album = album_match.group(1)
                 continue
@@ -178,7 +203,7 @@ def get_album_tags_from_cuefile(cuefile, config):
             album = config.args.album
 
         if config.args.genre is None:
-            genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', decoded_line, re.IGNORECASE)
             if genre_match is not None and global_genre is None:
                 global_genre = genre_match.group(1)
                 continue
@@ -187,7 +212,7 @@ def get_album_tags_from_cuefile(cuefile, config):
         return tag_dict
 
     if config.args.year is None:
-        with open(cuefile) as cuefile_fd:
+        with open(cuefile, encoding=encoding) as cuefile_fd:
             for cuefile_line in cuefile_fd.readlines():
                 year_match = re.match(r'^ *\t*(REM )?DATE *\t*([0-9]*) *$', cuefile_line, re.IGNORECASE)
                 if year_match is not None:
@@ -204,9 +229,11 @@ def get_album_tags_from_cuefile(cuefile, config):
         genre = None
         lossless_file = None
         for line in cue_info.readlines():
+            decoded_line = fix_coding_issue(line, encoding)
+
             # 'perfomer' is a mispelling due to a bug in cueprint
             if config.args.performer is None:
-                artist_match = re.match(r'^ *\t*perfomer: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+                artist_match = re.match(r'^ *\t*perfomer: *\t*(.*) *$', decoded_line, re.IGNORECASE)
                 if artist_match is not None:
                     artist = artist_match.group(1)
                     if artist == '':
@@ -215,13 +242,13 @@ def get_album_tags_from_cuefile(cuefile, config):
             else:
                 artist = config.args.performer
 
-            title_match = re.match(r'^ *\t*title: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+            title_match = re.match(r'^ *\t*title: *\t*(.*) *$', decoded_line, re.IGNORECASE)
             if title_match is not None:
                 title = title_match.group(1)
                 continue
 
             if config.args.genre is None:
-                genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', line.decode('utf-8'), re.IGNORECASE)
+                genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', decoded_line, re.IGNORECASE)
                 if genre_match is not None:
                     genre = genre_match.group(1)
                     if genre == '':
@@ -230,7 +257,8 @@ def get_album_tags_from_cuefile(cuefile, config):
             else:
                 genre = config.args.genre
 
-            lossless_file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', line.decode('utf-8'), re.IGNORECASE)
+            lossless_file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', decoded_line,
+                                           re.IGNORECASE)
             if lossless_file_match is not None:
                 lossless_file = lossless_file_match.group()
                 continue
@@ -286,8 +314,10 @@ def get_album_tags_from_dir(config):
                 [config.other_tools[config.decoder], '-i', track_file, '-y', '-f', 'ffmetadata']).stderr
 
             for line in decode_stderr.readlines():
+                decoded_line = line.decode(config.cuefile_encoding)
+
                 if config.args.performer is None:
-                    artist_match = re.match(r'^ +ARTIST +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                    artist_match = re.match(r'^ +ARTIST +: +(.*)$', decoded_line, re.IGNORECASE)
                     if artist_match is not None:
                         artist = artist_match.group(1)
                         continue
@@ -295,7 +325,7 @@ def get_album_tags_from_dir(config):
                     artist = config.args.performer
 
                 if config.args.album is None:
-                    album_match = re.match(r'^ +ALBUM +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                    album_match = re.match(r'^ +ALBUM +: +(.*)$', decoded_line, re.IGNORECASE)
                     if album_match is not None:
                         album = album_match.group(1)
                         continue
@@ -303,40 +333,39 @@ def get_album_tags_from_dir(config):
                     album = config.args.album
 
                 if config.args.year is None:
-                    year_match = re.match(r' +DATE +: +([0-9][0-9][0-9][0-9]).?[0-9]?.?[0-9]?',
-                                          line.decode('utf-8'), re.IGNORECASE)
+                    year_match = re.match(r' +DATE +: +([0-9][0-9][0-9][0-9]).?[0-9]?.?[0-9]?', decoded_line,
+                                          re.IGNORECASE)
                     if year_match is not None:
                         year = int(year_match.group(1))
                         continue
                 else:
                     year = config.args.year
 
-                disc_match = re.match(r'^ +disc +: +([0-9]+)$', line.decode('utf-8'),
-                                           re.IGNORECASE)
+                disc_match = re.match(r'^ +disc +: +([0-9]+)$', decoded_line, re.IGNORECASE)
                 if disc_match is not None:
                     disc = int(disc_match.group(1))
                     continue
 
-                disctotal_match = re.match(r'^ +DISCTOTAL +: +([0-9]+)$', line.decode('utf-8'),
+                disctotal_match = re.match(r'^ +DISCTOTAL +: +([0-9]+)$', decoded_line,
                                            re.IGNORECASE)
                 if disctotal_match is not None:
                     disctotal = int(disctotal_match.group(1))
                     continue
 
-                title_match = re.match(r'^ +title +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                title_match = re.match(r'^ +title +: +(.*)$', decoded_line, re.IGNORECASE)
                 if title_match is not None:
                     title = title_match.group(1)
                     continue
 
                 if config.args.genre is None:
-                    genre_match = re.match(r'^ +GENRE +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                    genre_match = re.match(r'^ +GENRE +: +(.*)$', decoded_line, re.IGNORECASE)
                     if genre_match is not None:
                         genre = genre_match.group(1)
                         continue
                 else:
                     genre = config.args.genre
 
-                track_match = re.match(r'^ +track +: +(.*)$', line.decode('utf-8'), re.IGNORECASE)
+                track_match = re.match(r'^ +track +: +(.*)$', decoded_line, re.IGNORECASE)
                 if track_match is not None:
                     track = int(track_match.group(1))
                     continue
@@ -367,10 +396,12 @@ def get_album_tags_from_dir(config):
 def extract_single_lossless_file(single_lossless_file, cuefile):
     if not single_lossless_file:
         return None
-    with open(cuefile) as cuefile_fd:
-        lossless_file = None
+    lossless_file = None
+
+    with open(cuefile, encoding=config.cuefile_encoding) as cuefile_fd:
         for cuefile_line in cuefile_fd.readlines():
-            lossless_file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', cuefile_line, re.IGNORECASE)
+            lossless_file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', cuefile_line,
+                                           re.IGNORECASE)
             if lossless_file_match is not None:
                 if lossless_file is not None:
                     return None
@@ -531,6 +562,7 @@ def main():
         return -1
     elif ret[0] == 0:
         cuefile = ret[1]
+        config.cuefile_encoding = detect_cuefile_encoding(cuefile)
         album_tags = get_album_tags_from_cuefile(cuefile, config)
         single_lossless_file = extract_single_lossless_file(album_tags['single_lossless_file'], cuefile)
         decode_input_files(config, album_tags, cuefile, single_lossless_file)
