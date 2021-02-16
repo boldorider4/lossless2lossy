@@ -235,7 +235,9 @@ def get_album_tags_from_cuefile(cuefile, config):
         if lossless_file is None:
             track_tag_dict['infile'] = f'split-track{track:02d}.wav'
         else:
-            track_tag_dict['infile'] = lossless_file
+            track_tag_dict['losslessfile'] = lossless_file
+            filename, ext = os.path.splitext(lossless_file)
+            track_tag_dict['infile'] = filename + '.wav'
         track_tag_dict['outfile'] = f'{track:02d} {slugify(title)}.m4a'
         if 1 not in tag_dict:
             tag_dict[1] = dict()
