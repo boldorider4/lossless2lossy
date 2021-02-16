@@ -386,6 +386,8 @@ def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
             decode_cmd.append(lossless_file)
 
         decode_stdout = subprocess.Popen(decode_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+    elif 1 not in tag_dict:
+        print('No files containing tags found! Leaving decode function...')
     else:
         print('The referenced cuefile contains multiple files. Converting one by one...')
         decode_cmd = config.decode_tools[config.decoder].copy()
@@ -460,6 +462,10 @@ def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
 
 
 def convert_files(album_tags, config):
+    if 1 not in album_tags:
+        print('No files containing tags found! Leaving convert function...')
+        return
+
     if config.args.path is not None and os.path.isdir(config.args.path):
         dir_name = config.args.path
     else:
