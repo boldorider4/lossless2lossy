@@ -369,50 +369,50 @@ def compose_converter_cmd(config, tags, dir_name):
     outfile = os.path.join(dir_name, tags['outfile'])
 
     if config.encoder == 'afconvert_bin':
-        cmd = config.encode_tools[config.encoder].copy()
-        cmd.append('-b')
-        cmd.append(config.args.bitrate)
-        cmd.append(infile)
-        cmd.append(outfile)
+        encoder_cmd = config.encode_tools[config.encoder].copy()
+        encoder_cmd.append('-b')
+        encoder_cmd.append(config.args.bitrate)
+        encoder_cmd.append(infile)
+        encoder_cmd.append(outfile)
     elif config.encoder == 'ffmpeg_bin':
-        cmd = config.encode_tools[config.encoder].copy()
-        cmd.append(infile)
-        cmd.append(outfile)
+        encoder_cmd = config.encode_tools[config.encoder].copy()
+        encoder_cmd.append(infile)
+        encoder_cmd.append(outfile)
     else:
         raise NotImplementedError()
-    return cmd
+    return encoder_cmd
 
 
 def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
     outfile = os.path.join(dir_name, tags['outfile'])
 
-    cmd = config.other_tools[config.tagger]
+    tagger_cmd = config.other_tools[config.tagger].copy()
     if config.tagger == 'atomicparsley_bin':
-        cmd.append('--tracknum')
-        cmd.append('"' + track + '/' + n_tracks + '"')
-        cmd.append('--title')
-        cmd.append(tags['title'])
-        cmd.append('--artist')
-        cmd.apppend(tags['artist'])
-        cmd.append('--album')
-        cmd.append(tags['album'])
-        cmd.append('--genre')
-        cmd.append(tags['genre'])
-        cmd.append('--year')
-        cmd.append(tags['year'])
-        cmd.append('--comment')
-        cmd.append(tags['comment'])
+        tagger_cmd.append('--tracknum')
+        tagger_cmd.append('"' + track + '/' + n_tracks + '"')
+        tagger_cmd.append('--title')
+        tagger_cmd.append(tags['title'])
+        tagger_cmd.append('--artist')
+        tagger_cmd.apppend(tags['artist'])
+        tagger_cmd.append('--album')
+        tagger_cmd.append(tags['album'])
+        tagger_cmd.append('--genre')
+        tagger_cmd.append(tags['genre'])
+        tagger_cmd.append('--year')
+        tagger_cmd.append(tags['year'])
+        tagger_cmd.append('--comment')
+        tagger_cmd.append(tags['comment'])
         if n_discs < 2 and (config.args.discs is None or config.args.discs < 2):
-            cmd.append('--disk')
+            tagger_cmd.append('--disk')
             if config.args.disc is not None:
                 disc = config.args.disc
             if config.args.discs is not None:
                 n_discs = config.args.discs
-            cmd.append('"' + disc + '/' + n_discs + '"')
+            tagger_cmd.append('"' + disc + '/' + n_discs + '"')
         if config.args.cover is not None:
-            cmd.append('--artwork')
-            cmd.append(config.args.cover)
-        cmd.append(outfile)
+            tagger_cmd.append('--artwork')
+            tagger_cmd.append(config.args.cover)
+        tagger_cmd.append(outfile)
     else:
         raise NotImplementedError()
 
