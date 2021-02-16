@@ -262,7 +262,7 @@ def get_album_tags_from_cuefile(cuefile, config):
             lossless_file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', decoded_line,
                                            re.IGNORECASE)
             if lossless_file_match is not None:
-                lossless_file = lossless_file_match.group()
+                lossless_file = os.path.join(os.path.dirname(cuefile), lossless_file_match.group(1))
                 continue
 
         track_tag_dict = dict()
@@ -408,7 +408,7 @@ def extract_single_lossless_file(cuefile, config):
                 if lossless_file is not None:
                     return None
                 else:
-                    lossless_file = lossless_file_match.group(1)
+                    lossless_file = os.path.join(os.path.dirname(cuefile), lossless_file_match.group(1))
     return lossless_file
 
 
