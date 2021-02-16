@@ -349,8 +349,12 @@ def extract_single_lossless_file(cuefile):
     return None
 
 
-        if config.decoder == 'atomicparsley_bin':
-            decode_cmd = config.decode_tools[config.decoder]
+def decode_input_files(cuefile, config, tag_dict, single_lossless_file=None):
+    if single_lossless_file is not None:
+        print('A single lossless file was found! Splitting it...')
+        decode_cmd = config.decode_tools[config.splitter].copy()
+
+        if config.splitter == 'shntool_bin':
             decode_cmd.append('-f')
             decode_cmd.append(cuefile)
             decode_cmd.append('-d')
@@ -359,9 +363,27 @@ def extract_single_lossless_file(cuefile):
             decode_cmd.append('wav')
             decode_cmd.append('-O')
             decode_cmd.append('always')
-            decode_cmd.append(lossless_file)
+            decode_cmd.append(single_lossless_file)
 
         decode_stdout = subprocess.Popen(decode_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+    else:
+        print('The referenced cuefile contains multiple files. Converting one by one...')
+        decode_cmd = config.decode_tools[config.decoder].copy()
+
+        for disc in tag_dict:
+            for track in tag_dict[disc]:
+                try:
+                    losslessfile = track['losslessfile']
+                except KeyError as key_error:
+                    print('the tag dict does not contain a losslessfile field in each track...')
+                    raise key_error
+
+                if config.splitter == 'ffmpeg_bin':
+                    decode_cmd.append('-i')
+                    decode_cmd.append(losslessfile)
+                    decode_cmd.append(track['infile'])
+
+                decode_stdout = subprocess.Popen(decode_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
 
 
 def compose_converter_cmd(config, tags, dir_name):
@@ -473,7 +495,8 @@ def main():
     elif ret[0] == 0:
         cuefile = ret[1]
         album_tags = get_album_tags_from_cuefile(cuefile, config)
-        decode_input_files(cuefile, config, album_tags)
+        single_lossless_file = extract_single_lossless_file(cuefile)
+        decode_input_files(cuefile, config, album_tags, single_lossless_file=single_lossless_file)
 
     convert_files(album_tags, config)
     return 0
