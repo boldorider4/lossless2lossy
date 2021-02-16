@@ -393,7 +393,7 @@ def get_album_tags_from_dir(config):
     return tag_dict
 
 
-def extract_single_lossless_file(single_lossless_file, cuefile):
+def extract_single_lossless_file(cuefile, config, single_lossless_file):
     if not single_lossless_file:
         return None
     lossless_file = None
@@ -564,7 +564,7 @@ def main():
         cuefile = ret[1]
         config.cuefile_encoding = detect_cuefile_encoding(cuefile)
         album_tags = get_album_tags_from_cuefile(cuefile, config)
-        single_lossless_file = extract_single_lossless_file(album_tags['single_lossless_file'], cuefile)
+        single_lossless_file = extract_single_lossless_file(cuefile, config, album_tags['single_lossless_file'])
         decode_input_files(config, album_tags, cuefile, single_lossless_file)
 
     convert_files(album_tags, config)
