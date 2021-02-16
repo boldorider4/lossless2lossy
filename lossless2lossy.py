@@ -336,13 +336,18 @@ def get_album_tags_from_dir(config):
     return tag_dict
 
 
-def decode_input_files(cuefile, config, tag_dict):
+def extract_single_lossless_file(cuefile):
     with open(cuefile) as cuefile_fd:
+        lossless_file = None
         for cuefile_line in cuefile_fd.readlines():
             lossless_file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', cuefile_line, re.IGNORECASE)
             if lossless_file_match is not None:
-                lossless_file = lossless_file_match.group(2)
-                break
+                if lossless_file is not None:
+                    return None
+                else:
+                    lossless_file = lossless_file_match.group(2)
+    return None
+
 
         if config.decoder == 'atomicparsley_bin':
             decode_cmd = config.decode_tools[config.decoder]
