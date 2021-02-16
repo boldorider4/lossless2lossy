@@ -422,13 +422,9 @@ def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
             decode_cmd.append(cuefile)
             decode_cmd.append('-d')
             decode_cmd.append('.')
-            decode_cmd.append('-o')
-            decode_cmd.append('wav')
-            decode_cmd.append('-O')
-            decode_cmd.append('always')
             decode_cmd.append(lossless_file)
 
-        decode_stdout = subprocess_popen(decode_cmd).stdout
+        return [subprocess_popen(decode_cmd)]
     elif 1 not in tag_dict:
         print('No files containing tags found! Leaving decode function...')
     else:
