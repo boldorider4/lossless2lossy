@@ -12,6 +12,7 @@ class ConvertConfig:
         self.other_tools = dict()
         self.decoder = ''
         self.encoder = ''
+        self.splitter = ''
         self.tagger = ''
         self.args = args
 
@@ -37,6 +38,7 @@ def create_config(args):
     config = ConvertConfig(args)
     config.decode_tools = { 'flac_bin' : 'flac',
                             'shntool_bin' : ['shntool', 'split', '-o', 'wav', '-O', 'always'],
+                            'ffmpeg_bin' : ['ffmpeg'],
                             'mac_bin' : 'mac',
                             'wvunpack_bin' : 'wvunpack' }
     config.encode_tools = { 'ffmpeg_bin' : ['ffmpeg'],
@@ -48,6 +50,7 @@ def create_config(args):
                            'atomicparsley_bin' : ['AtomicParsley', '--overWrite'] }
     config.decoder = 'ffmpeg_bin'
     config.encoder = 'afconvert_bin'
+    config.splitter = 'shntool_bin'
     config.tagger = 'atomicparsley_bin'
     return config
 
