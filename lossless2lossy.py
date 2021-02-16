@@ -407,8 +407,8 @@ def extract_single_lossless_file(cuefile, config):
                 if lossless_file is not None:
                     return None
                 else:
-                    lossless_file = lossless_file_match.group(2)
-    return None
+                    lossless_file = lossless_file_match.group(1)
+    return lossless_file
 
 
 def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
