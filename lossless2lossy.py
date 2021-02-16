@@ -14,6 +14,7 @@ class ConvertConfig:
         self.encoder = ''
         self.splitter = ''
         self.tagger = ''
+        self.cuefile_encoding = 'utf-8'
         self.args = args
 
 
