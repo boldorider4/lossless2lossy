@@ -15,6 +15,7 @@ class ConvertConfig:
         self.splitter = ''
         self.tagger = ''
         self.cuefile_encoding = 'utf-8'
+        self.single_lossless_file = None
         self.args = args
 
 
@@ -283,9 +284,9 @@ def get_album_tags_from_cuefile(cuefile, config):
         tag_dict[1][track] = track_tag_dict
 
     if lossless_file is None:
-        tag_dict['single_lossless_file'] = True
+        config.single_lossless_file = True
     else:
-        tag_dict['single_lossless_file'] = False
+        config.single_lossless_file = False
 
     return tag_dict
 
@@ -388,13 +389,13 @@ def get_album_tags_from_dir(config):
             tag_dict[disc] = dict()
         tag_dict[disc][track] = track_tag_dict
 
-    tag_dict['single_lossless_file'] = False
+    config.single_lossless_file = False
 
     return tag_dict
 
 
-def extract_single_lossless_file(cuefile, config, single_lossless_file):
-    if not single_lossless_file:
+def extract_single_lossless_file(cuefile, config):
+    if not config.single_lossless_file:
         return None
     lossless_file = None
 
@@ -411,7 +412,7 @@ def extract_single_lossless_file(cuefile, config, single_lossless_file):
 
 
 def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
-    if tag_dict['single_lossless_file']:
+    if config.single_lossless_file:
         print('A single lossless file was found! Splitting it...')
         decode_cmd = config.decode_tools[config.splitter].copy()
 
@@ -564,7 +565,7 @@ def main():
         cuefile = ret[1]
         config.cuefile_encoding = detect_cuefile_encoding(cuefile)
         album_tags = get_album_tags_from_cuefile(cuefile, config)
-        single_lossless_file = extract_single_lossless_file(cuefile, config, album_tags['single_lossless_file'])
+        single_lossless_file = extract_single_lossless_file(cuefile, config)
         decode_input_files(config, album_tags, cuefile, single_lossless_file)
 
     convert_files(album_tags, config)
