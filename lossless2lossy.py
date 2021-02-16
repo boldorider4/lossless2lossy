@@ -107,9 +107,10 @@ def check_tools(config):
     return True
 
 
-def select_cuefile(cuefile=None):
+def select_cuefile(args):
     cwd = os.getcwd()
-    if cuefile:
+    cuefile = args.cuefile
+    if cuefile is not None:
         if os.path.exists(os.path.join(cwd, cuefile)):
             return (0, cuefile)
         else:
@@ -552,7 +553,7 @@ def main():
     if not check:
         return -1
 
-    ret = select_cuefile(args.cuefile)
+    ret = select_cuefile(args)
     album_tags = None
 
     if ret[0] == 1:
