@@ -567,7 +567,8 @@ def main():
         config.cuefile_encoding = detect_cuefile_encoding(cuefile)
         album_tags = get_album_tags_from_cuefile(cuefile, config)
         single_lossless_file = extract_single_lossless_file(cuefile, config)
-        decode_input_files(config, album_tags, cuefile, single_lossless_file)
+        piped_subprocess = decode_input_files(config, album_tags, cuefile, single_lossless_file)
+        piped_subprocess.wait()
 
     convert_files(album_tags, config)
     return 0
