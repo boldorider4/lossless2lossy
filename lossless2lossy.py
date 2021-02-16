@@ -56,11 +56,23 @@ def create_config(args):
     return config
 
 
+def subprocess_popen(cmd):
+    try:
+        env_path = dict()
+        env_path['PATH'] = os.environ['PATH']
+        env_path['PATH'] = '/usr/local/bin:' + env_path['PATH']
+        return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env_path, shell=False)
+    except FileNotFoundError as file_not_found_error:
+        print('something went wrong when trying to run {}'.format(cmd))
+        print(file_not_found_error)
+        exit(-1)
+
+
 def check_tools(config):
     
     # check other tools
     for tool in config.other_tools.values():
-        proc = subprocess.Popen(['which',tool],stdout=subprocess.PIPE)
+        proc = subprocess_popen(['which',tool])
         if len(proc.stdout.readlines()) == 0:
             print('{} is missing and is required'.format(tool))
             return False        
@@ -68,7 +80,7 @@ def check_tools(config):
     # check decode tools
     is_any_tool_installed = False
     for tool in config.decode_tools.values():
-        proc = subprocess.Popen(['which',tool],stdout=subprocess.PIPE)
+        proc = subprocess_popen(['which',tool])
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
@@ -81,7 +93,7 @@ def check_tools(config):
     # check encode tools
     is_any_tool_installed = False
     for tool in config.encode_tools.values():
-        proc = subprocess.Popen(['which',tool],stdout=subprocess.PIPE)
+        proc = subprocess_popen(['which',tool])
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
@@ -137,8 +149,7 @@ def slugify(value, allow_unicode=False):
 def get_album_tags_from_cuefile(cuefile, config):
     tag_dict = dict()
 
-    cue_info = subprocess.Popen([config.other_tools['cueprint_bin'], cuefile],
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+    cue_info = subprocess_popen([config.other_tools['cueprint_bin'], cuefile]).stdout
 
     n_track = None
     album = None
@@ -186,8 +197,7 @@ def get_album_tags_from_cuefile(cuefile, config):
         year = config.args.year
 
     for track in range(1, n_track+1):
-        cue_info = subprocess.Popen([config.other_tools['cueprint_bin'], cuefile, '-n', str(track)],
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+        cue_info = subprocess_popen([config.other_tools['cueprint_bin'], cuefile, '-n', str(track)]).stdout
 
         artist = None
         title = None
@@ -272,9 +282,8 @@ def get_album_tags_from_dir(config):
         converted_filename = filename + '.wav'
 
         if config.decoder == 'ffmpeg_bin':
-            decode_stderr = subprocess.Popen(
-                [config.other_tools[config.decoder], '-i', track_file, '-y', '-f', 'ffmetadata'],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE).stderr
+            decode_stderr = subprocess_popen(
+                [config.other_tools[config.decoder], '-i', track_file, '-y', '-f', 'ffmetadata']).stderr
 
             for line in decode_stderr.readlines():
                 if config.args.performer is None:
@@ -386,7 +395,7 @@ def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
             decode_cmd.append('always')
             decode_cmd.append(lossless_file)
 
-        decode_stdout = subprocess.Popen(decode_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+        decode_stdout = subprocess_popen(decode_cmd).stdout
     elif 1 not in tag_dict:
         print('No files containing tags found! Leaving decode function...')
     else:
@@ -406,7 +415,7 @@ def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
                     decode_cmd.append(losslessfile)
                     decode_cmd.append(track['infile'])
 
-                decode_stdout = subprocess.Popen(decode_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+                decode_stdout = subprocess_popen(decode_cmd).stdout
 
 
 def compose_converter_cmd(config, tags, dir_name):
@@ -492,14 +501,14 @@ def convert_files(album_tags, config):
             for param in converter_cmd:
                 output_cmd.append(param + ' ')
             print(output_cmd)
-            convert_stdout = subprocess.Popen(converter_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+            convert_stdout = subprocess_popen(converter_cmd).stdout
 
             tagger_cmd = compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name)
             output_cmd = ''
             for param in tagger_cmd:
                 output_cmd.append(param + ' ')
             print(output_cmd)
-            tagging_stdout = subprocess.Popen(tagger_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+            tagging_stdout = subprocess_popen(tagger_cmd).stdout
 
 
 def main():
