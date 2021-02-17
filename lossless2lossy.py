@@ -498,7 +498,7 @@ def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
     if config.tagger == 'atomicparsley_bin':
         tagger_cmd.insert(1, outfile)
         tagger_cmd.append('--tracknum')
-        tagger_cmd.append('"' + str(track) + '/' + str(n_tracks) + '"')
+        tagger_cmd.append(str(track) + '/' + str(n_tracks))
         tagger_cmd.append('--title')
         tagger_cmd.append(tags['title'])
         tagger_cmd.append('--artist')
@@ -511,13 +511,13 @@ def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
         tagger_cmd.append(tags['year'])
         tagger_cmd.append('--comment')
         tagger_cmd.append(tags['comment'])
-        if n_discs < 2 and (config.args.discs is None or config.args.discs < 2):
+        if n_discs > 1 or (config.args.discs is not None and config.args.discs > 1):
             tagger_cmd.append('--disk')
             if config.args.disc is not None:
                 disc = config.args.disc
             if config.args.discs is not None:
                 n_discs = config.args.discs
-            tagger_cmd.append('"' + str(disc) + '/' + str(n_discs) + '"')
+            tagger_cmd.append(str(disc) + '/' + str(n_discs))
         if config.args.cover is not None and os.stat(config.args.cover) and os.path.isfile(config.args.cover):
             tagger_cmd.append('--artwork')
             tagger_cmd.append(config.args.cover)
