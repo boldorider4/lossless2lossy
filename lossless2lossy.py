@@ -558,8 +558,7 @@ def convert_files(album_tags, config):
 def main():
     args = parser()
     config = create_config(args=args)
-    # check = check_tools(config)
-    check = True
+    check = check_tools(config)
 
     if not check:
         return -1
