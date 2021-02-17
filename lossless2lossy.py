@@ -38,17 +38,17 @@ def parser():
 
 def create_config(args):
     config = ConvertConfig(args)
-    config.decode_tools = { 'flac_bin' : 'flac',
+    config.decode_tools = { 'flac_bin' : ['flac'],
                             'shntool_bin' : ['shntool', 'split', '-o', 'wav', '-O', 'always'],
                             'ffmpeg_bin' : ['ffmpeg'],
-                            'mac_bin' : 'mac',
+                            'mac_bin' : ['mac'],
                             'wvunpack_bin' : 'wvunpack' }
     config.encode_tools = { 'ffmpeg_bin' : ['ffmpeg'],
                             'afconvert_bin' : ['afconvert', '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
                                                '127', '-s', '2', '--soundcheck-generate'] }
-    config.other_tools = { 'mp4box_bin' : 'mp4box',
-                           'ffmpeg_bin' : 'ffmpeg',
-                           'cueprint_bin' : 'cueprint',
+    config.other_tools = { 'mp4box_bin' : ['mp4box'],
+                           'ffmpeg_bin' : ['ffmpeg'],
+                           'cueprint_bin' : ['cueprint'],
                            'atomicparsley_bin' : ['AtomicParsley', '--overWrite'] }
     config.decoder = 'ffmpeg_bin'
     config.encoder = 'afconvert_bin'
@@ -73,20 +73,20 @@ def check_tools(config):
     
     # check other tools
     for tool in config.other_tools.values():
-        proc = subprocess_popen(['which',tool])
+        proc = subprocess_popen(['which',tool[0]])
         if len(proc.stdout.readlines()) == 0:
-            print('{} is missing and is required'.format(tool))
+            print('{} is missing and is required'.format(tool[0]))
             return False        
 
     # check decode tools
     is_any_tool_installed = False
     for tool in config.decode_tools.values():
-        proc = subprocess_popen(['which',tool])
+        proc = subprocess_popen(['which',tool[0]])
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
         for tool in config.decode_tools.values():
-            error_msg += tool + ' '
+            error_msg += tool[0] + ' '
         error_msg += 'is installed'
         print(error_msg)
         return False
@@ -94,12 +94,12 @@ def check_tools(config):
     # check encode tools
     is_any_tool_installed = False
     for tool in config.encode_tools.values():
-        proc = subprocess_popen(['which',tool])
+        proc = subprocess_popen(['which',tool[0]])
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
         for tool in config.encode_tools.values():
-            error_msg += tool + ' '
+            error_msg += tool[0] + ' '
         error_msg += 'are installed'
         print(error_msg)
         return False
