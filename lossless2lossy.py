@@ -176,7 +176,11 @@ def get_album_tags_from_cuefile(cuefile, config):
     tag_dict = dict()
     encoding = config.cuefile_encoding
 
-    cue_info = subprocess_popen([config.other_tools['cueprint_bin'], cuefile]).stdout
+    cueprint_cmd = config.other_tools['cueprint_bin'].copy()
+    cueprint_cmd.append(cuefile)
+    cue_info_subprocess = subprocess_popen(cueprint_cmd)
+    cue_info_subprocess.wait()
+    cue_info = cue_info_subprocess.stdout
 
     n_track = None
     album = None
@@ -226,7 +230,12 @@ def get_album_tags_from_cuefile(cuefile, config):
         year = config.args.year
 
     for track in range(1, n_track+1):
-        cue_info = subprocess_popen([config.other_tools['cueprint_bin'], cuefile, '-n', str(track)]).stdout
+        cueprint_cmd = config.other_tools['cueprint_bin'].copy()
+        cueprint_cmd.append(cuefile)
+        cueprint_cmd.append('-n')
+        cueprint_cmd.append(str(track))
+        cue_info_subprocess = subprocess_popen(cueprint_cmd)
+        cue_info = cue_info_subprocess.stdout
 
         artist = None
         title = None
