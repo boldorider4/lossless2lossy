@@ -76,6 +76,7 @@ def check_tools(config):
     # check other tools
     for tool in config.other_tools.values():
         proc = subprocess_popen(['which',tool[0]])
+        proc.wait()
         if len(proc.stdout.readlines()) == 0:
             print('{} is missing and is required'.format(tool[0]))
             return False        
@@ -84,6 +85,7 @@ def check_tools(config):
     is_any_tool_installed = False
     for tool in config.decode_tools.values():
         proc = subprocess_popen(['which',tool[0]])
+        proc.wait()
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
@@ -97,6 +99,7 @@ def check_tools(config):
     is_any_tool_installed = False
     for tool in config.encode_tools.values():
         proc = subprocess_popen(['which',tool[0]])
+        proc.wait()
         is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
     if not is_any_tool_installed:
         error_msg = 'neither of '
@@ -235,6 +238,7 @@ def get_album_tags_from_cuefile(cuefile, config):
         cueprint_cmd.append('-n')
         cueprint_cmd.append(str(track))
         cue_info_subprocess = subprocess_popen(cueprint_cmd)
+        cue_info_subprocess.wait()
         cue_info = cue_info_subprocess.stdout
 
         artist = None
@@ -323,8 +327,10 @@ def get_album_tags_from_dir(config):
         converted_filename = filename + '.wav'
 
         if config.decoder == 'ffmpeg_bin':
-            decode_stderr = subprocess_popen(
-                [config.other_tools[config.decoder], '-i', track_file, '-y', '-f', 'ffmetadata']).stderr
+            decode_subprocess = subprocess_popen(
+                [config.other_tools[config.decoder], '-i', track_file, '-y', '-f', 'ffmetadata'])
+            decode_subprocess.wait()
+            decode_stderr = decode_subprocess.stderr
 
             for line in decode_stderr.readlines():
                 decoded_line = line.decode(config.cuefile_encoding)
@@ -539,6 +545,7 @@ def convert_files(album_tags, config):
         os.mkdir(dir_name)
 
     n_discs = len(album_tags)
+    tagging_subprocess = list()
     for disc, tracktags in album_tags.items():
         n_tracks = len(tracktags)
         for track, tags in tracktags.items():
@@ -563,7 +570,10 @@ def convert_files(album_tags, config):
             for param in tagger_cmd:
                 output_cmd += param + ' '
             print(output_cmd)
-            tagging_subprocess = subprocess_popen(tagger_cmd)
+            tagging_subprocess.append(subprocess_popen(tagger_cmd))
+
+    for tagging_subproc in tagging_subprocess:
+        tagging_subproc.wait()
 
 
 def main():
