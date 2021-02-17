@@ -533,8 +533,7 @@ def convert_files(album_tags, config):
         for track, tags in tracktags.items():
             print()
             print('converting track {}/{} of disc {}/{}...'.format(track, n_tracks, disc, n_discs))
-            print('cmd line is ')
-            print()
+            print('cmd line is')
 
             converter_cmd = compose_converter_cmd(config, tags, dir_name)
             output_cmd = ''
