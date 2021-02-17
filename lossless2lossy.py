@@ -435,7 +435,7 @@ def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
         decode_stdout = list()
 
         for disc in tag_dict:
-            for track in tag_dict[disc]:
+            for n_track, track in tag_dict[disc].items():
                 try:
                     losslessfile = track['losslessfile']
                 except KeyError as key_error:
@@ -454,11 +454,15 @@ def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
 def compose_converter_cmd(config, tags, dir_name):
     infile = tags['infile']
     outfile = os.path.join(dir_name, tags['outfile'])
+    if config.args.bitrate is None:
+        bitrate = str(256000)
+    else:
+        bitrate = config.args.bitrate
 
     if config.encoder == 'afconvert_bin':
         encoder_cmd = config.encode_tools[config.encoder].copy()
         encoder_cmd.append('-b')
-        encoder_cmd.append(config.args.bitrate)
+        encoder_cmd.append(bitrate)
         encoder_cmd.append(infile)
         encoder_cmd.append(outfile)
     elif config.encoder == 'ffmpeg_bin':
@@ -475,12 +479,13 @@ def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
 
     tagger_cmd = config.other_tools[config.tagger].copy()
     if config.tagger == 'atomicparsley_bin':
+        tagger_cmd.insert(1, outfile)
         tagger_cmd.append('--tracknum')
-        tagger_cmd.append('"' + track + '/' + n_tracks + '"')
+        tagger_cmd.append('"' + str(track) + '/' + str(n_tracks) + '"')
         tagger_cmd.append('--title')
         tagger_cmd.append(tags['title'])
         tagger_cmd.append('--artist')
-        tagger_cmd.apppend(tags['artist'])
+        tagger_cmd.append(tags['artist'])
         tagger_cmd.append('--album')
         tagger_cmd.append(tags['album'])
         tagger_cmd.append('--genre')
@@ -495,13 +500,14 @@ def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
                 disc = config.args.disc
             if config.args.discs is not None:
                 n_discs = config.args.discs
-            tagger_cmd.append('"' + disc + '/' + n_discs + '"')
-        if config.args.cover is not None:
+            tagger_cmd.append('"' + str(disc) + '/' + str(n_discs) + '"')
+        if config.args.cover is not None and os.stat(config.args.cover) and os.path.isfile(config.args.cover):
             tagger_cmd.append('--artwork')
             tagger_cmd.append(config.args.cover)
-        tagger_cmd.append(outfile)
     else:
         raise NotImplementedError()
+
+    return tagger_cmd
 
 
 def convert_files(album_tags, config):
@@ -514,7 +520,8 @@ def convert_files(album_tags, config):
     else:
         dir_name = os.getcwd()
 
-    dir_name = os.path.join(dir_name, config.args.album)
+    global_album = album_tags[1][1]['album']
+    dir_name = os.path.join(dir_name, global_album)
     try:
         os.stat(dir_name)
     except:
@@ -532,16 +539,21 @@ def convert_files(album_tags, config):
             converter_cmd = compose_converter_cmd(config, tags, dir_name)
             output_cmd = ''
             for param in converter_cmd:
-                output_cmd.append(param + ' ')
+                output_cmd += param + ' '
             print(output_cmd)
-            convert_stdout = subprocess_popen(converter_cmd).stdout
+            print('taggin track track {}/{} of disc {}/{}...'.format(track, n_tracks, disc, n_discs))
+            convert_subprocess = subprocess_popen(converter_cmd)
+            convert_subprocess.wait()
+
+            print('cleaning up temp files...')
+            os.remove(tags['infile'])
 
             tagger_cmd = compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name)
             output_cmd = ''
             for param in tagger_cmd:
-                output_cmd.append(param + ' ')
+                output_cmd += param + ' '
             print(output_cmd)
-            tagging_stdout = subprocess_popen(tagger_cmd).stdout
+            tagging_subprocess = subprocess_popen(tagger_cmd)
 
 
 def main():
@@ -568,7 +580,8 @@ def main():
         album_tags = get_album_tags_from_cuefile(cuefile, config)
         single_lossless_file = extract_single_lossless_file(cuefile, config)
         piped_subprocess = decode_input_files(config, album_tags, cuefile, single_lossless_file)
-        piped_subprocess.wait()
+        for process in piped_subprocess:
+            process.wait()
 
     convert_files(album_tags, config)
     return 0
