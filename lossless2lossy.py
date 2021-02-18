@@ -460,7 +460,6 @@ def decode_input_files(config, tag_dict, cuefile=None, single_lossless_file=None
         exit(-1)
     else:
         print('The referenced cuefile contains multiple files. Converting one by one...')
-        decode_cmd = config.decode_tools[config.decoder].copy()
 
         decode_stdout = list()
 
@@ -472,10 +471,15 @@ def decode_input_files(config, tag_dict, cuefile=None, single_lossless_file=None
                     print('the tag dict does not contain a losslessfile field in each track...')
                     raise key_error
 
-                if config.splitter == 'ffmpeg_bin':
+                infile = track['infile']
+                print('converting {} to {}'.format(losslessfile, infile))
+
+                decode_cmd = config.decode_tools[config.decoder].copy()
+                if config.decoder == 'ffmpeg_bin':
                     decode_cmd.append('-i')
                     decode_cmd.append(losslessfile)
-                    decode_cmd.append(track['infile'])
+                    decode_cmd.append('-y')
+                    decode_cmd.append(infile)
 
                 decode_stdout.append(subprocess_popen(decode_cmd))
         return decode_stdout
