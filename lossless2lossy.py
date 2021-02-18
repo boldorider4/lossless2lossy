@@ -579,6 +579,14 @@ def convert_files(album_tags, config):
 
     for tagging_subproc in tagging_subprocess:
         tagging_subproc.wait()
+    if config.args.cover is not None and config.tagger == 'atomicparsley_bin':
+        cover_filename, cover_ext = os.path.splitext(config.args.cover)
+        cover_residue = os.path.basename(cover_filename + '-resized')
+        for filename in os.listdir(os.getcwd()):
+            if filename.startswith(cover_residue) and (filename.endswith('.jpeg') or \
+                                                        filename.endswith('.jpg') or \
+                                                        filename.endswith('.png') or filename.endswith(cover_ext)):
+                os.remove(filename)
 
 
 def main():
