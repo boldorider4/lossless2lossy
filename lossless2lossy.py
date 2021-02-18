@@ -327,6 +327,24 @@ def get_album_tags_from_dir(config):
                           or f.endswith('.flac')]
     tag_dict = dict()
 
+    decode_stderr = list()
+    for track_file in audio_source_files:
+
+        if config.decoder == 'ffmpeg_bin':
+            decode_cmd = config.other_tools[config.decoder].copy()
+            decode_cmd.append('-i')
+            decode_cmd.append(track_file)
+            decode_cmd.append('-y')
+            decode_cmd.append('-f')
+            decode_cmd.append('ffmetadata')
+
+            decode_subprocess = subprocess_popen(decode_cmd)
+            decode_subprocess.wait()
+            decode_stderr.append(decode_subprocess.stderr)
+        else:
+            raise NotImplementedError()
+
+    track_idx = 0
     for track_file in audio_source_files:
         artist = None
         album = None
@@ -340,12 +358,8 @@ def get_album_tags_from_dir(config):
         converted_filename = filename + '.wav'
 
         if config.decoder == 'ffmpeg_bin':
-            decode_subprocess = subprocess_popen(
-                [config.other_tools[config.decoder], '-i', track_file, '-y', '-f', 'ffmetadata'])
-            decode_subprocess.wait()
-            decode_stderr = decode_subprocess.stderr
-
-            for line in decode_stderr.readlines():
+            decode_output = decode_stderr[track_idx]
+            for line in decode_output.readlines():
                 decoded_line = line.decode(config.cuefile_encoding)
 
                 if config.args.performer is None:
@@ -419,6 +433,7 @@ def get_album_tags_from_dir(config):
         if disc not in tag_dict:
             tag_dict[disc] = dict()
         tag_dict[disc][track] = track_tag_dict
+        track_idx += 1
 
     config.single_lossless_file = False
 
@@ -584,6 +599,7 @@ def convert_files(album_tags, config):
     for disc, tracktags in album_tags.items():
         n_tracks = len(tracktags)
         for track, tags in tracktags.items():
+            print()
             print('cleaning up temp file...')
             os.remove(tags['infile'])
 
@@ -623,7 +639,7 @@ def main():
     if ret[0] == 1:
         print('trying file by file mode...')
         album_tags = get_album_tags_from_dir(config)
-        decode_input_files(config, album_tags)
+        piped_subprocess = decode_input_files(config, album_tags)
     elif ret[0] == -1:
         return -1
     elif ret[0] == 0:
@@ -632,8 +648,8 @@ def main():
         album_tags = get_album_tags_from_cuefile(cuefile, config)
         single_lossless_file = extract_single_lossless_file(cuefile, config)
         piped_subprocess = decode_input_files(config, album_tags, cuefile, single_lossless_file)
-        for process in piped_subprocess:
-            process.wait()
+    for process in piped_subprocess:
+        process.wait()
 
     convert_files(album_tags, config)
     return 0
