@@ -551,24 +551,31 @@ def convert_files(album_tags, config):
 
     n_discs = len(album_tags)
     tagging_subprocess = list()
+    converting_subprocess = list()
     for disc, tracktags in album_tags.items():
         n_tracks = len(tracktags)
         for track, tags in tracktags.items():
             print()
-            print('converting track {}/{} of disc {}/{}...'.format(track, n_tracks, disc, n_discs))
-            print('cmd line is')
+            print('converting track {}/{} of disc {}/{}...cmd line is'.format(track, n_tracks, disc, n_discs))
 
             converter_cmd = compose_converter_cmd(config, tags, dir_name)
             output_cmd = ''
             for param in converter_cmd:
                 output_cmd += param + ' '
             print(output_cmd)
-            print('taggin track track {}/{} of disc {}/{}...'.format(track, n_tracks, disc, n_discs))
-            convert_subprocess = subprocess_popen(converter_cmd)
-            convert_subprocess.wait()
 
-            print('cleaning up temp files...')
+            converting_subprocess.append(subprocess_popen(converter_cmd))
+
+    for convert_subprocess in converting_subprocess:
+        convert_subprocess.wait()
+
+    for disc, tracktags in album_tags.items():
+        n_tracks = len(tracktags)
+        for track, tags in tracktags.items():
+            print('cleaning up temp file...')
             os.remove(tags['infile'])
+
+            print('taggin track track {}/{} of disc {}/{}...'.format(track, n_tracks, disc, n_discs))
 
             tagger_cmd = compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name)
             output_cmd = ''
@@ -579,6 +586,7 @@ def convert_files(album_tags, config):
 
     for tagging_subproc in tagging_subprocess:
         tagging_subproc.wait()
+
     if config.args.cover is not None and config.tagger == 'atomicparsley_bin':
         cover_filename, cover_ext = os.path.splitext(config.args.cover)
         cover_residue = os.path.basename(cover_filename + '-resized')
