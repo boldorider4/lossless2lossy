@@ -116,7 +116,8 @@ def select_cuefile(args):
     cwd = os.getcwd()
     cuefile = args.cuefile
     if cuefile is not None:
-        if os.path.exists(os.path.join(cwd, cuefile)):
+        cuefile = os.path.abspath(args.cuefile)
+        if os.stat(cuefile) and os.path.isfile(cuefile):
             return (0, cuefile)
         else:
             print('selected cuefile does not exist')
@@ -134,6 +135,10 @@ def select_cuefile(args):
         else:
             print('no cuefile present in dir')
             return (1, '')
+    config.args.cover = os.path.abspath(config.args.cover)
+    if config.args.cover is None or not (os.stat(config.args.cover) or os.path.isfile(config.args.cover)):
+        print('warning: cover file does not exist or is not a valid file')
+        config.args.cover = None
 
 
 def slugify(value, allow_unicode=False):
@@ -518,7 +523,7 @@ def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
             if config.args.discs is not None:
                 n_discs = config.args.discs
             tagger_cmd.append(str(disc) + '/' + str(n_discs))
-        if config.args.cover is not None and os.stat(config.args.cover) and os.path.isfile(config.args.cover):
+        if config.args.cover is not None:
             tagger_cmd.append('--artwork')
             tagger_cmd.append(config.args.cover)
     else:
