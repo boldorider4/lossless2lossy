@@ -496,6 +496,12 @@ def compose_converter_cmd(config, tags, dir_name):
     return encoder_cmd
 
 
+def append_option_to_cmd(cmd, option, tag):
+    if tag is not None and isinstance(tag, str) and tag != '':
+        cmd.append(option)
+        cmd.append(tag)
+
+
 def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
     outfile = os.path.join(dir_name, tags['outfile'])
 
@@ -504,18 +510,12 @@ def compose_tagger_cmd(config, track, n_tracks, disc, n_discs, tags, dir_name):
         tagger_cmd.insert(1, outfile)
         tagger_cmd.append('--tracknum')
         tagger_cmd.append(str(track) + '/' + str(n_tracks))
-        tagger_cmd.append('--title')
-        tagger_cmd.append(tags['title'])
-        tagger_cmd.append('--artist')
-        tagger_cmd.append(tags['artist'])
-        tagger_cmd.append('--album')
-        tagger_cmd.append(tags['album'])
-        tagger_cmd.append('--genre')
-        tagger_cmd.append(tags['genre'])
-        tagger_cmd.append('--year')
-        tagger_cmd.append(tags['year'])
-        tagger_cmd.append('--comment')
-        tagger_cmd.append(tags['comment'])
+        append_option_to_cmd(tagger_cmd, '--title', tags['title'])
+        append_option_to_cmd(tagger_cmd, '--artist', tags['artist'])
+        append_option_to_cmd(tagger_cmd, '--album', tags['album'])
+        append_option_to_cmd(tagger_cmd, '--genre', tags['genre'])
+        append_option_to_cmd(tagger_cmd, '--year', tags['year'])
+        append_option_to_cmd(tagger_cmd, '--comment', tags['comment'])
         if n_discs > 1 or (config.args.discs is not None and config.args.discs > 1):
             tagger_cmd.append('--disk')
             if config.args.disc is not None:
