@@ -442,7 +442,7 @@ def extract_single_lossless_file(cuefile, config):
     return lossless_file
 
 
-def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
+def decode_input_files(config, tag_dict, cuefile=None, single_lossless_file=None):
     if config.single_lossless_file:
         print('A single lossless file was found! Splitting it...')
         decode_cmd = config.decode_tools[config.splitter].copy()
@@ -452,7 +452,7 @@ def decode_input_files(config, tag_dict, cuefile=None, lossless_file=None):
             decode_cmd.append(cuefile)
             decode_cmd.append('-d')
             decode_cmd.append('.')
-            decode_cmd.append(lossless_file)
+            decode_cmd.append(single_lossless_file)
 
         return [subprocess_popen(decode_cmd)]
     elif 1 not in tag_dict:
