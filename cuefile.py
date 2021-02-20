@@ -10,10 +10,11 @@ class Cuefile:
 
     def select_cuefile(self):
         args = self.args
-        args.cover = os.path.abspath(args.cover)
-        if args.cover is None or not (os.stat(args.cover) or os.path.isfile(args.cover)):
-            print('warning: cover file does not exist or is not a valid file')
-            args.cover = None
+        if args.cover is not None:
+            args.cover = os.path.abspath(args.cover)
+            if (os.stat(args.cover) or os.path.isfile(args.cover)):
+                print('warning: cover file does not exist or is not a valid file')
+                args.cover = None
 
         cwd = os.getcwd()
         cuefile = args.cuefile
