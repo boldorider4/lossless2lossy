@@ -59,7 +59,6 @@ class Cuefile:
                         return None
                     else:
                         lossless_file = os.path.join(os.path.dirname(cuefile), lossless_file_match.group(1))
-        return lossless_file
 
     def _detect_cuefile_encoding(self):
         cuefile = self.cuefile
