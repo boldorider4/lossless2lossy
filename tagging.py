@@ -21,70 +21,89 @@ class Tagging:
         encoding = config.cuefile_encoding
         tag_dict = dict()
 
-        cueprint_cmd = config.other_tools['cueprint_bin'].copy()
-        cueprint_cmd.append(cuefile)
-        cue_info_subprocess = subprocess_popen(cueprint_cmd)
-        cue_info_subprocess.wait()
-        cue_info = cue_info_subprocess.stdout
-
-        n_track = None
-        album = None
+        n_track = 0
         global_artist = None
         global_genre = None
-        year = None
+        first_track_detected = False
+        # detecting multiple lossless files
+        lossless_files = dict()
 
-        for line in cue_info.readlines():
-            decoded_line = self._fix_coding_issue(line, encoding)
+        with open(cuefile, encoding=encoding) as cuefile_fd:
+            for cuefile_line in cuefile_fd.readlines():
+                artist = None
+                title = None
+                genre = None
 
-            n_tracks_match = re.match(r'^ *\t*no. of tracks: *\t*([0-9]+) *$', decoded_line, re.IGNORECASE)
-            if n_tracks_match is not None and n_track is None:
-                n_track = int(n_tracks_match.group(1))
-                continue
-
-            if config.args.performer is None:
-                artist_match = re.match(r'^ *\t*performer: *\t*(.*) *$', decoded_line, re.IGNORECASE)
-                if artist_match is not None and global_artist is None:
-                    global_artist = artist_match.group(1)
-                    continue
-
-            if config.args.album is None:
-                album_match = re.match(r'^ *\t*title: *\t*(.*) *$', decoded_line, re.IGNORECASE)
-                if album_match is not None and album is None:
-                    album = album_match.group(1)
-                    continue
-            else:
-                album = config.args.album
-
-            if config.args.genre is None:
-                genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', decoded_line, re.IGNORECASE)
-                if genre_match is not None and global_genre is None:
-                    global_genre = genre_match.group(1)
-                    continue
-
-        if n_track is None:
-            return tag_dict
-
-        if config.args.year is None:
-            with open(cuefile, encoding=encoding) as cuefile_fd:
-                for cuefile_line in cuefile_fd.readlines():
+                if config.args.year is None:
                     year_match = re.match(r'^ *\t*(REM )?DATE *\t*"?([0-9]*)"? *$', cuefile_line, re.IGNORECASE)
                     if year_match is not None:
                         year = year_match.group(2)
-                        break
-        else:
-            year = config.args.year
+                        continue
+                else:
+                    year = config.args.year
 
-        track_idx = range(1, n_track+1)
+                if config.args.performer is None:
+                    artist_match = re.match(r'^ *\t*(REM )?PERFORMER *\t*"?(.*)"? *$', cuefile_line, re.IGNORECASE)
+                    if artist_match is not None:
+                        if first_track_detected:
+                            artist = artist_match.group(1)
+                        else:
+                            global_artist = artist_match.group(1)
+                        continue
+                else:
+                    artist = config.args.performer
+                    global_artist = artist
 
-        # detecting multiple lossless files
-        lossless_files = dict()
-        idx = 0
-        with open(cuefile) as cuefile_fd:
-            for cuefile_line in cuefile_fd.readlines():
+                if config.args.genre is None:
+                    genre_match = re.match(r'^ *\t*(REM )?GENRE *\t*"?(.*)"? *$', cuefile_line, re.IGNORECASE)
+                    if genre_match is not None:
+                        if first_track_detected:
+                            genre = genre_match.group(1)
+                        else:
+                            global_genre = genre_match.group(1)
+                        continue
+                else:
+                    genre = config.args.genre
+                    global_genre = genre
+
+                title_match = re.match(r'^ *\t*(REM )?TITLE *\t*"?(.*)"? *$', cuefile_line, re.IGNORECASE)
+                if title_match is not None:
+                    if first_track_detected:
+                        title = title_match.group(1)
+                    else:
+                        album = title_match.group(1)
+                    continue
+
+                file_match = re.match(r'^ *\t*(REM )?TRACK *\t*"?(.*)"? *$', cuefile_line, re.IGNORECASE)
+                if file_match is not None:
+                    first_track_detected = True
+                    n_track += 1
+
                 file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', cuefile_line, re.IGNORECASE)
                 if file_match is not None:
-                    lossless_files[track_idx[idx]] = file_match.group(1)
-                    idx += 1
+                    lossless_files[n_track] = file_match.group(1)
+
+                track_tag_dict = dict()
+                track_tag_dict['artist'] = artist.title()
+                track_tag_dict['album'] = album.title()
+                track_tag_dict['year'] = year
+                track_tag_dict['title'] = title.title()
+                track_tag_dict['genre'] = genre.title()
+                track_tag_dict['global_genre'] = global_genre.title()
+                track_tag_dict['comment'] = 'Generated by all new lossless2lossy.py!'
+                track_tag_dict['disctotal'] = '1'
+                if config.single_lossless_file:
+                    track_tag_dict['infile'] = f'split-track{n_track:02d}.wav'
+                else:
+                    lossless_file = lossless_files[n_track]
+                    track_tag_dict['losslessfile'] = lossless_file
+                    filename, ext = os.path.splitext(lossless_file)
+                    track_tag_dict['infile'] = filename + '.wav'
+                track_tag_dict['outfile'] = f'{n_track:02d} {slugify(title)}.m4a'
+                if 1 not in tag_dict:
+                    tag_dict[1] = dict()
+                tag_dict[1][n_track] = track_tag_dict
+
         if len(lossless_files) == 0:
             print('malformed cuefile: no lossless file specified')
             exit(-1)
@@ -92,67 +111,6 @@ class Tagging:
             config.single_lossless_file = False
         else:
             config.single_lossless_file = True
-
-        for track in track_idx:
-            cueprint_cmd = config.other_tools['cueprint_bin'].copy()
-            cueprint_cmd.append(cuefile)
-            cueprint_cmd.append('-n')
-            cueprint_cmd.append(str(track))
-            cue_info_subprocess = subprocess_popen(cueprint_cmd)
-            cue_info_subprocess.wait()
-            cue_info = cue_info_subprocess.stdout
-
-            artist = None
-            title = None
-            genre = None
-            for line in cue_info.readlines():
-                decoded_line = self._fix_coding_issue(line, encoding)
-
-                # 'perfomer' is a mispelling due to a bug in cueprint
-                if config.args.performer is None:
-                    artist_match = re.match(r'^ *\t*perfomer: *\t*(.*) *$', decoded_line, re.IGNORECASE)
-                    if artist_match is not None:
-                        artist = artist_match.group(1)
-                        if artist == '':
-                            artist = global_artist
-                        continue
-                else:
-                    artist = config.args.performer
-
-                title_match = re.match(r'^ *\t*title: *\t*(.*) *$', decoded_line, re.IGNORECASE)
-                if title_match is not None:
-                    title = title_match.group(1)
-                    continue
-
-                if config.args.genre is None:
-                    genre_match = re.match(r'^ *\t*genre: *\t*(.*) *$', decoded_line, re.IGNORECASE)
-                    if genre_match is not None:
-                        genre = genre_match.group(1)
-                        if genre == '':
-                            genre = global_genre
-                        continue
-                else:
-                    genre = config.args.genre
-
-            track_tag_dict = dict()
-            track_tag_dict['artist'] = artist.title()
-            track_tag_dict['album'] = album.title()
-            track_tag_dict['year'] = year
-            track_tag_dict['title'] = title.title()
-            track_tag_dict['genre'] = genre.title()
-            track_tag_dict['comment'] = 'Generated by all new lossless2lossy.py!'
-            track_tag_dict['disctotal'] = '1'
-            if config.single_lossless_file:
-                track_tag_dict['infile'] = f'split-track{track:02d}.wav'
-            else:
-                lossless_file = lossless_files[track]
-                track_tag_dict['losslessfile'] = lossless_file
-                filename, ext = os.path.splitext(lossless_file)
-                track_tag_dict['infile'] = filename + '.wav'
-            track_tag_dict['outfile'] = f'{track:02d} {slugify(title)}.m4a'
-            if 1 not in tag_dict:
-                tag_dict[1] = dict()
-            tag_dict[1][track] = track_tag_dict
 
         return tag_dict
 

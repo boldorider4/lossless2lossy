@@ -53,7 +53,6 @@ def create_config(args):
                                                '127', '-s', '2', '--soundcheck-generate'] }
     config.other_tools = { 'mp4box_bin' : ['mp4box'],
                            'ffmpeg_bin' : ['ffmpeg'],
-                           'cueprint_bin' : ['cueprint'],
                            'atomicparsley_bin' : ['AtomicParsley', '--overWrite'] }
     config.decoder = 'ffmpeg_bin'
     config.encoder = 'afconvert_bin'
