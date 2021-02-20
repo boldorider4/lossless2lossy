@@ -7,6 +7,7 @@ import os
 import re
 
 from cuefile import Cuefile
+from tagging import Tagging
 
 
 class ConvertConfig:
@@ -302,6 +303,7 @@ def main():
     args = parser()
     config = create_config(args=args)
     cuefile = Cuefile(config=config)
+    tagging = Tagging(config=config)
     check = check_tools(config)
 
     if not check:
@@ -312,11 +314,11 @@ def main():
 
     if ret[0] == 1:
         print('trying file by file mode...')
-        album_tags = get_album_tags_from_dir(config)
+        album_tags = tagging.get_album_tags_from_dir()
         piped_subprocess = decode_input_files(config, album_tags)
     elif ret[0] == 0:
         cuefile = ret[1]
-        album_tags = get_album_tags_from_cuefile(cuefile, config)
+        album_tags = tagging.get_album_tags_from_cuefile()
         single_lossless_file = cuefile.extract_single_lossless_file()
         piped_subprocess = decode_input_files(config, album_tags, cuefile, single_lossless_file)
     for process in piped_subprocess:

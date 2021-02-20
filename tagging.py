@@ -2,8 +2,8 @@ import re
 import os
 
 class Tagging:
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        self.config = config
 
     def _fix_coding_issue(self, line, encoding):
         decoded_line = line.decode(encoding)
@@ -11,8 +11,9 @@ class Tagging:
             decoded_line = decoded_line.replace('’', '\'', )
         return decoded_line
 
-    def get_album_tags_from_cuefile(self, config):
+    def get_album_tags_from_cuefile(self):
         cuefile = self.cuefile
+        config = self.config
         tag_dict = dict()
         encoding = config.cuefile_encoding
 
@@ -101,7 +102,7 @@ class Tagging:
             title = None
             genre = None
             for line in cue_info.readlines():
-                decoded_line = fix_coding_issue(line, encoding)
+                decoded_line = self._fix_coding_issue(line, encoding)
 
                 # 'perfomer' is a mispelling due to a bug in cueprint
                 if config.args.performer is None:
@@ -151,7 +152,8 @@ class Tagging:
 
         return tag_dict
 
-    def get_album_tags_from_dir(self, config):
+    def get_album_tags_from_dir(self):
+        config = self.config
         cwd = os.getcwd()
         audio_source_files = [f for f in os.listdir(cwd) if f.endswith('.ape')
                               or f.endswith('.wv')

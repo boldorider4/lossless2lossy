@@ -1,4 +1,5 @@
 import os
+import re
 
 class Cuefile:
     def __init__(self, config):
