@@ -278,18 +278,18 @@ def main():
     if not check:
         return -1
 
-    ret = cuefile.select_cuefile()
+    cuefile.select_cuefile()
     album_tags = None
 
-    if ret[0] == 1:
+    if cuefile.mode == 1:
         print('trying file by file mode...')
         album_tags = tagging.get_album_tags_from_dir()
         piped_subprocess = decode_input_files(config, album_tags)
-    elif ret[0] == 0:
-        cuefile = ret[1]
+    elif cuefile.mode == 0:
+        cue_file = cuefile.cuefile
         album_tags = tagging.get_album_tags_from_cuefile()
         single_lossless_file = cuefile.extract_single_lossless_file()
-        piped_subprocess = decode_input_files(config, album_tags, cuefile, single_lossless_file)
+        piped_subprocess = decode_input_files(config, album_tags, cue_file, single_lossless_file)
     for process in piped_subprocess:
         process.wait()
 
