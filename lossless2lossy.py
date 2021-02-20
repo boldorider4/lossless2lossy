@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import argparse
-import os
 
 from cuefile import Cuefile
 from tagging import Tagging
