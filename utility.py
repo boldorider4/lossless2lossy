@@ -31,3 +31,43 @@ def slugify(value, allow_unicode=False):
         value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
     value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+
+def check_tools(config):
+    # check other tools
+    for tool in config.other_tools.values():
+        proc = subprocess_popen(['which',tool[0]])
+        proc.wait()
+        if len(proc.stdout.readlines()) == 0:
+            print('{} is missing and is required'.format(tool[0]))
+            return False
+
+    # check decode tools
+    is_any_tool_installed = False
+    for tool in config.decode_tools.values():
+        proc = subprocess_popen(['which',tool[0]])
+        proc.wait()
+        is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
+    if not is_any_tool_installed:
+        error_msg = 'neither of '
+        for tool in config.decode_tools.values():
+            error_msg += tool[0] + ' '
+        error_msg += 'is installed'
+        print(error_msg)
+        return False
+
+    # check encode tools
+    is_any_tool_installed = False
+    for tool in config.encode_tools.values():
+        proc = subprocess_popen(['which',tool[0]])
+        proc.wait()
+        is_any_tool_installed |= (len(proc.stdout.readlines()) > 0)
+    if not is_any_tool_installed:
+        error_msg = 'neither of '
+        for tool in config.encode_tools.values():
+            error_msg += tool[0] + ' '
+        error_msg += 'are installed'
+        print(error_msg)
+        return False
+
+    return True
