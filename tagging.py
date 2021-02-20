@@ -1,8 +1,15 @@
 import re
+import os
 
 class Tagging:
     def __init__(self):
         pass
+
+    def _fix_coding_issue(self, line, encoding):
+        decoded_line = line.decode(encoding)
+        if encoding == 'cp1252':
+            decoded_line = decoded_line.replace('’', '\'', )
+        return decoded_line
 
     def get_album_tags_from_cuefile(self, config):
         cuefile = self.cuefile
@@ -22,7 +29,7 @@ class Tagging:
         year = None
 
         for line in cue_info.readlines():
-            decoded_line = fix_coding_issue(line, encoding)
+            decoded_line = self._fix_coding_issue(line, encoding)
 
             n_tracks_match = re.match(r'^ *\t*no. of tracks: *\t*([0-9]+) *$', decoded_line, re.IGNORECASE)
             if n_tracks_match is not None and n_track is None:
@@ -185,6 +192,7 @@ class Tagging:
                 decode_output = decode_stderr[track_idx]
                 for line in decode_output.readlines():
                     decoded_line = line.decode(config.cuefile_encoding)
+                    decoded_line = self._fix_coding_issue(decoded_line, config.cuefile_encoding)
 
                     if config.args.performer is None:
                         artist_match = re.match(r'^ +ARTIST +: +(.*)$', decoded_line, re.IGNORECASE)

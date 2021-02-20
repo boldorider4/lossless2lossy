@@ -6,6 +6,8 @@ import unicodedata
 import os
 import re
 
+from cuefile import Cuefile
+
 
 class ConvertConfig:
     def __init__(self, args):
@@ -126,13 +128,6 @@ def slugify(value, allow_unicode=False):
         value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
     value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '-', value).strip('-_')
-
-
-def fix_coding_issue(line, encoding):
-    decoded_line = line.decode(encoding)
-    if encoding == 'cp1252':
-        decoded_line = decoded_line.replace('’', '\'', )
-    return decoded_line
 
 
 def decode_input_files(config, tag_dict, cuefile=None, single_lossless_file=None):
@@ -306,25 +301,23 @@ def convert_files(album_tags, config):
 def main():
     args = parser()
     config = create_config(args=args)
+    cuefile = Cuefile(config=config)
     check = check_tools(config)
 
     if not check:
         return -1
 
-    ret = select_cuefile(args)
+    ret = cuefile.select_cuefile()
     album_tags = None
 
     if ret[0] == 1:
         print('trying file by file mode...')
         album_tags = get_album_tags_from_dir(config)
         piped_subprocess = decode_input_files(config, album_tags)
-    elif ret[0] == -1:
-        return -1
     elif ret[0] == 0:
         cuefile = ret[1]
-        config.cuefile_encoding = detect_cuefile_encoding(cuefile)
         album_tags = get_album_tags_from_cuefile(cuefile, config)
-        single_lossless_file = extract_single_lossless_file(cuefile, config)
+        single_lossless_file = cuefile.extract_single_lossless_file()
         piped_subprocess = decode_input_files(config, album_tags, cuefile, single_lossless_file)
     for process in piped_subprocess:
         process.wait()
