@@ -4,6 +4,7 @@ import os
 from utility import subprocess_popen
 from utility import slugify
 
+
 class Tagging:
     def __init__(self, config):
         self.config = config
@@ -14,11 +15,11 @@ class Tagging:
             decoded_line = decoded_line.replace('’', '\'', )
         return decoded_line
 
-    def get_album_tags_from_cuefile(self):
-        cuefile = self.cuefile
+    def get_album_tags_from_cuefile(self, cuefile_obj):
         config = self.config
-        tag_dict = dict()
+        cuefile = cuefile_obj.cuefile
         encoding = config.cuefile_encoding
+        tag_dict = dict()
 
         cueprint_cmd = config.other_tools['cueprint_bin'].copy()
         cueprint_cmd.append(cuefile)

@@ -119,7 +119,7 @@ def main():
     if cuefile.mode == 1:
         album_tags = tagging.get_album_tags_from_dir()
     elif cuefile.mode == 0:
-        album_tags = tagging.get_album_tags_from_cuefile()
+        album_tags = tagging.get_album_tags_from_cuefile(cuefile)
         config.single_lossless_file = cuefile.extract_single_lossless_file()
 
     codec.decode_input_files(album_tags, cuefile)
