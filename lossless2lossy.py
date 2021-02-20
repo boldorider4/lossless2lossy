@@ -282,7 +282,6 @@ def main():
     album_tags = None
 
     if cuefile.mode == 1:
-        print('trying file by file mode...')
         album_tags = tagging.get_album_tags_from_dir()
         piped_subprocess = decode_input_files(config, album_tags)
     elif cuefile.mode == 0:

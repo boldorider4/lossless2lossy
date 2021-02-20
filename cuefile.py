@@ -23,7 +23,6 @@ class Cuefile:
                 self.cuefile = cuefile
                 self.mode = 0
                 self._detect_cuefile_encoding()
-                return (0, cuefile)
             else:
                 print('selected cuefile does not exist')
                 exit(-1)
@@ -36,15 +35,13 @@ class Cuefile:
                 self.cuefile = cuefile
                 self.mode = 0
                 self._detect_cuefile_encoding()
-                return (0, cuefile)
             elif len(candidates) > 1:
                 print('ambiguous cuefiles...')
                 exit(-1)
             else:
-                print('no cuefile present in dir')
+                print('no cuefile present in dir...trying file by file mode...')
                 self.cuefile = None
                 self.mode = 1
-                return (1, '')
 
     def extract_single_lossless_file(self):
         cuefile = self.cuefile
