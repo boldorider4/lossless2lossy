@@ -1,5 +1,7 @@
 import os
+import re
 import subprocess
+import unicodedata
 
 
 def subprocess_popen(cmd):
