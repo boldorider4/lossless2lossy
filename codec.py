@@ -85,7 +85,7 @@ class Codec:
                 print()
                 print('converting track {}/{} of disc {}/{}...cmd line is'.format(track, n_tracks, disc, n_discs))
 
-                converter_cmd = self._compose_converter_cmd(config, tags, dir_name)
+                converter_cmd = self._compose_converter_cmd(tags, dir_name)
                 output_cmd = ''
                 for param in converter_cmd:
                     output_cmd += param + ' '
