@@ -111,6 +111,7 @@ class Tagging:
                 print('malformed cuefile: number of lossless files differs from number of tracks')
                 exit(-1)
             for track, lossless_file in lossless_files.items():
+                lossless_file = os.path.join(os.path.dirname(os.path.abspath(cuefile)), lossless_file)
                 filename, ext = os.path.splitext(lossless_file)
                 tag_dict[1][track]['losslessfile'] = lossless_file
                 tag_dict[1][track]['infile'] = filename + '.wav'
