@@ -21,6 +21,21 @@ class ConvertConfig:
         self.single_lossless_file = None
         self.args = args
         self.single_lossless_file = None
+        self.decode_tools = { 'flac_bin' : ['flac'],
+                                'shntool_bin' : ['shntool', 'split', '-o', 'wav', '-O', 'always'],
+                                'ffmpeg_bin' : ['ffmpeg'],
+                                'mac_bin' : ['mac'],
+                                'wvunpack_bin' : 'wvunpack' }
+        self.encode_tools = { 'ffmpeg_bin' : ['ffmpeg'],
+                                'afconvert_bin' : ['afconvert', '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
+                                                   '127', '-s', '2', '--soundcheck-generate'] }
+        self.other_tools = { 'mp4box_bin' : ['mp4box'],
+                               'ffmpeg_bin' : ['ffmpeg'],
+                               'atomicparsley_bin' : ['AtomicParsley', '--overWrite'] }
+        self.decoder = 'ffmpeg_bin'
+        self.encoder = 'afconvert_bin'
+        self.splitter = 'shntool_bin'
+        self.tagger = 'atomicparsley_bin'
 
 
 def parser():
@@ -40,29 +55,9 @@ def parser():
     return args
 
 
-def create_config(args):
-    config = ConvertConfig(args)
-    config.decode_tools = { 'flac_bin' : ['flac'],
-                            'shntool_bin' : ['shntool', 'split', '-o', 'wav', '-O', 'always'],
-                            'ffmpeg_bin' : ['ffmpeg'],
-                            'mac_bin' : ['mac'],
-                            'wvunpack_bin' : 'wvunpack' }
-    config.encode_tools = { 'ffmpeg_bin' : ['ffmpeg'],
-                            'afconvert_bin' : ['afconvert', '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
-                                               '127', '-s', '2', '--soundcheck-generate'] }
-    config.other_tools = { 'mp4box_bin' : ['mp4box'],
-                           'ffmpeg_bin' : ['ffmpeg'],
-                           'atomicparsley_bin' : ['AtomicParsley', '--overWrite'] }
-    config.decoder = 'ffmpeg_bin'
-    config.encoder = 'afconvert_bin'
-    config.splitter = 'shntool_bin'
-    config.tagger = 'atomicparsley_bin'
-    return config
-
-
 def main():
     args = parser()
-    config = create_config(args=args)
+    config = ConvertConfig(args=args)
     cuefile = Cuefile(config=config)
     tagging = Tagging(config=config)
     codec = Codec(config=config)
