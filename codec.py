@@ -43,7 +43,7 @@ class Codec:
                         raise key_error
 
                     infile = track['infile']
-                    print('converting {} to {}'.format(losslessfile, infile))
+                    print('converting {} to {}'.format(os.path.basename(losslessfile), os.path.basename(infile)))
 
                     decode_cmd = config.decode_tools[config.decoder].copy()
                     if config.decoder == 'ffmpeg_bin':
@@ -79,10 +79,10 @@ class Codec:
         n_discs = len(album_tags)
         tagging_subprocess = list()
         converting_subprocess = list()
+        print()
         for disc, tracktags in album_tags.items():
             n_tracks = len(tracktags)
             for track, tags in tracktags.items():
-                print()
                 print('converting track {}/{} of disc {}/{}...cmd line is'.format(track, n_tracks, disc, n_discs))
 
                 converter_cmd = self._compose_converter_cmd(tags, dir_name)
@@ -96,10 +96,10 @@ class Codec:
         for convert_subprocess in converting_subprocess:
             convert_subprocess.wait()
 
+        print()
         for disc, tracktags in album_tags.items():
             n_tracks = len(tracktags)
             for track, tags in tracktags.items():
-                print()
                 print('cleaning up temp file...')
                 os.remove(tags['infile'])
 
