@@ -9,7 +9,7 @@ class Codec:
 
     def decode_input_files(self, tag_dict, cuefile_object):
         config = self.config
-        single_lossless_file = config.single_lossless_file
+        single_lossless_file = config.single_lossless_file_name
 
         if config.single_lossless_file and cuefile_object.cuefile is not None:
             print('A single lossless file was found! Splitting it...')

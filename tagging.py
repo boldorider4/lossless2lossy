@@ -119,6 +119,7 @@ class Tagging:
                 tag_dict[1][track]['infile'] = filename + '.wav'
         else:
             config.single_lossless_file = True
+            config.single_lossless_file_name = lossless_files[1]
             for track, track_dict in tag_dict[1].items():
                 track_dict['infile'] = f'split-track{track:02d}.wav'
 
