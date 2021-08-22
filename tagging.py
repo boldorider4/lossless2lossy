@@ -48,11 +48,12 @@ class Tagging:
                         artist = artist_match.group(2)
                         if first_track_detected:
                             track_tag_dict['artist'] = artist.title()
-                        else:
-                            global_artist = artist.title()
+                        global_artist = artist.title()
                         continue
                 else:
-                    track_tag_dict['artist'] = config.args.performer.title()
+                    if first_track_detected:
+                        track_tag_dict['artist'] = config.args.performer.title()
+                    global_artist = config.args.performer.title()
 
                 if config.args.genre is None:
                     genre_match = re.match(r'^ *\t*(REM )?GENRE *\t*["\'](.*)["\'] *$', cuefile_line, re.IGNORECASE)
@@ -60,11 +61,12 @@ class Tagging:
                         genre = genre_match.group(2)
                         if first_track_detected:
                             track_tag_dict['genre'] = genre.title()
-                        else:
-                            global_genre = genre.title()
+                        global_genre = genre.title()
                         continue
                 else:
-                    track_tag_dict['genre'] = config.args.genre.title()
+                    if first_track_detected:
+                        track_tag_dict['genre'] = config.args.genre.title()
+                    global_genre = config.args.genre.title()
 
                 title_match = re.match(r'^ *\t*(REM )?TITLE *\t*["\'](.*)["\'] *$', cuefile_line, re.IGNORECASE)
                 if title_match is not None:
