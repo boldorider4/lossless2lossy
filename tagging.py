@@ -10,8 +10,11 @@ class Tagging:
         self.config = config
 
     def _fix_coding_issue(self, line, encoding):
-        decoded_line = line.decode(encoding)
-        if encoding == 'cp1252':
+        try:
+            decoded_line = line.decode(encoding)
+        except:
+            decoded_line = line
+        finally:
             decoded_line = decoded_line.replace('’', '\'', )
         return decoded_line
 
