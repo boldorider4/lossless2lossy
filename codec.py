@@ -63,8 +63,8 @@ class Codec:
             print('No files containing tags found! Leaving convert function...')
             exit(-1)
 
-        if config.args.path is not None and os.path.isdir(config.args.path):
-            dir_name = config.args.path
+        if config.args.path is not None and os.path.isdir(os.path.expanduser(config.args.path)):
+            dir_name = os.path.expanduser(config.args.path)
         else:
             dir_name = os.getcwd()
 
