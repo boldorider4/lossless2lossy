@@ -160,7 +160,7 @@ class Tagging:
             artist = None
             album = None
             year = None
-            disc = None
+            disc = 1
             disctotal = None
             title = None
             genre = None
