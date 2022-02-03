@@ -74,4 +74,4 @@ class Cuefile:
             cuefile_fd.readlines()
             cuefile_fd.close()
             encoding = 'cp1252'
-        self.config.encoding = encoding
+        self.config.cuefile_encoding = encoding
