@@ -101,6 +101,10 @@ class Tagging:
                     track_tag_dict['title'] = ''
                     track_tag_dict['infile'] = ''
                     track_tag_dict['outfile'] = f'{n_track:02d} {slugify(title)}.m4a'
+                    if config.args.cover is not None:
+                        track_tag_dict['cover'] = config.args.cover
+                    else:
+                        track_tag_dict['cover'] = ''
 
                 file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', cuefile_line, re.IGNORECASE)
                 if file_match is not None:
@@ -246,6 +250,10 @@ class Tagging:
                 tag_dict[disc] = dict()
             tag_dict[disc][track] = track_tag_dict
             track_idx += 1
+            if config.args.cover is not None:
+                track_tag_dict['cover'] = config.args.cover
+            else:
+                track_tag_dict['cover'] = ''
 
         config.single_lossless_file = False
 

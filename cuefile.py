@@ -11,17 +11,16 @@ class Cuefile:
     def select_cuefile(self):
         args = self.args
         if args.cover is not None:
-            args.cover = os.path.abspath(args.cover)
-            if (os.stat(args.cover) or os.path.isfile(args.cover)):
+            args.cover = os.path.realpath(os.path.expanduser(args.cover))
+            if not (os.stat(args.cover) or not os.path.isfile(args.cover)):
                 print('warning: cover file does not exist or is not a valid file')
                 args.cover = None
 
         cwd = os.getcwd()
-        cuefile = args.cuefile
-        if cuefile is not None:
-            cuefile = os.path.abspath(args.cuefile)
-            if os.stat(cuefile) and os.path.isfile(cuefile):
-                self.cuefile = cuefile
+        if args.cuefile is not None:
+            args.cuefile = os.path.realpath(os.path.expanduser(args.cuefile))
+            if os.stat(args.cuefile) and os.path.isfile(args.cuefile):
+                self.cuefile = args.cuefile
                 self.mode = 0
                 self._detect_cuefile_encoding()
             else:
