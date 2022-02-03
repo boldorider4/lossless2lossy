@@ -168,7 +168,7 @@ class Codec:
             self._append_option_to_cmd(tagger_cmd, '--genre', tags['genre'])
             self._append_option_to_cmd(tagger_cmd, '--year', tags['year'])
             self._append_option_to_cmd(tagger_cmd, '--comment', tags['comment'])
-            if n_discs > 1 or (config.args.discs is not None and config.args.discs > 1):
+            if int(n_discs) > 1 or (config.args.discs is not None and int(config.args.discs) > 1):
                 tagger_cmd.append('--disk')
                 if config.args.disc is not None:
                     disc = config.args.disc
