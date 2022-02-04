@@ -1,4 +1,5 @@
 import os
+import literals
 
 from utility import subprocess_popen
 
@@ -16,7 +17,7 @@ class Codec:
             cuefile = cuefile_object.cuefile
             decode_cmd = config.decode_tools[config.splitter].copy()
 
-            if config.splitter == 'shntool_bin':
+            if config.splitter == literals.shntool:
                 decode_cmd.append('-f')
                 decode_cmd.append(cuefile)
                 decode_cmd.append('-d')
@@ -36,16 +37,16 @@ class Codec:
             for disc in tag_dict:
                 for n_track, track in tag_dict[disc].items():
                     try:
-                        losslessfile = track['losslessfile']
+                        losslessfile = track[literals.losslessfile]
                     except KeyError as key_error:
                         print('the tag dict does not contain a losslessfile field in each track...')
                         raise key_error
 
-                    infile = track['infile']
+                    infile = track[literals.infile]
                     print('converting {} to {}'.format(os.path.basename(losslessfile), os.path.basename(infile)))
 
                     decode_cmd = config.decode_tools[config.decoder].copy()
-                    if config.decoder == 'ffmpeg_bin':
+                    if config.decoder == literals.ffmpeg:
                         decode_cmd.append('-i')
                         decode_cmd.append(losslessfile)
                         decode_cmd.append('-y')
@@ -68,7 +69,7 @@ class Codec:
         else:
             dir_name = os.getcwd()
 
-        global_album = album_tags[1][1]['album']
+        global_album = album_tags[1][1][literals.album]
         dir_name = os.path.join(dir_name, global_album)
         try:
             os.stat(dir_name)
@@ -100,7 +101,7 @@ class Codec:
             n_tracks = len(tracktags)
             for track, tags in tracktags.items():
                 print('cleaning up temp file...')
-                os.remove(tags['infile'])
+                os.remove(tags[literals.infile])
 
                 print('taggin track track {}/{} of disc {}/{}...'.format(track, n_tracks, disc, n_discs))
 
@@ -114,7 +115,7 @@ class Codec:
         for tagging_subproc in tagging_subprocess:
             tagging_subproc.wait()
 
-        if config.args.cover is not None and config.tagger == 'atomicparsley_bin':
+        if config.args.cover is not None and config.tagger == literals.atomicparsley:
             cover_filename, cover_ext = os.path.splitext(config.args.cover)
             cover_residue = os.path.basename(cover_filename + '-resized')
             for filename in os.listdir(os.getcwd()):
@@ -126,21 +127,21 @@ class Codec:
     def _compose_converter_cmd(self, tags, dir_name):
         config = self.config
 
-        infile = tags['infile']
-        outfile = os.path.join(dir_name, tags['outfile'])
+        infile = tags[literals.infile]
+        outfile = os.path.join(dir_name, tags[literals.outfile])
 
         if config.args.bitrate is None:
             bitrate = str(256000)
         else:
             bitrate = config.args.bitrate
 
-        if config.encoder == 'afconvert_bin':
+        if config.encoder == literals.afconvert:
             encoder_cmd = config.encode_tools[config.encoder].copy()
             encoder_cmd.append('-b')
             encoder_cmd.append(bitrate)
             encoder_cmd.append(infile)
             encoder_cmd.append(outfile)
-        elif config.encoder == 'ffmpeg_bin':
+        elif config.encoder == literals.ffmpeg:
             encoder_cmd = config.encode_tools[config.encoder].copy()
             encoder_cmd.append(infile)
             encoder_cmd.append(outfile)
@@ -155,19 +156,19 @@ class Codec:
 
     def _compose_tagger_cmd(self, track, n_tracks, disc, n_discs, tags, dir_name):
         config = self.config
-        outfile = os.path.join(dir_name, tags['outfile'])
+        outfile = os.path.join(dir_name, tags[literals.outfile])
 
         tagger_cmd = config.other_tools[config.tagger].copy()
-        if config.tagger == 'atomicparsley_bin':
+        if config.tagger == literals.atomicparsley:
             tagger_cmd.insert(1, outfile)
             tagger_cmd.append('--tracknum')
             tagger_cmd.append(str(track) + '/' + str(n_tracks))
-            self._append_option_to_cmd(tagger_cmd, '--title', tags['title'])
-            self._append_option_to_cmd(tagger_cmd, '--artist', tags['artist'])
-            self._append_option_to_cmd(tagger_cmd, '--album', tags['album'])
-            self._append_option_to_cmd(tagger_cmd, '--genre', tags['genre'])
-            self._append_option_to_cmd(tagger_cmd, '--year', tags['year'])
-            self._append_option_to_cmd(tagger_cmd, '--comment', tags['comment'])
+            self._append_option_to_cmd(tagger_cmd, '--title', tags[literals.title])
+            self._append_option_to_cmd(tagger_cmd, '--artist', tags[literals.artist])
+            self._append_option_to_cmd(tagger_cmd, '--album', tags[literals.album])
+            self._append_option_to_cmd(tagger_cmd, '--genre', tags[literals.genre])
+            self._append_option_to_cmd(tagger_cmd, '--year', tags[literals.year])
+            self._append_option_to_cmd(tagger_cmd, '--comment', tags[literals.comment])
             if int(n_discs) > 1 or (config.args.discs is not None and int(config.args.discs) > 1):
                 tagger_cmd.append('--disk')
                 if config.args.disc is not None:

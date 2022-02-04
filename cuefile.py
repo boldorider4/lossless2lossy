@@ -1,5 +1,6 @@
 import os
 import re
+import literals
 
 class Cuefile:
     def __init__(self, config):
@@ -62,15 +63,15 @@ class Cuefile:
 
     def _detect_cuefile_encoding(self):
         cuefile = self.cuefile
-        encoding = 'utf-8'
-        cuefile_fd = open(cuefile, 'r', encoding='utf-8')
+        encoding = literals.utf_8
+        cuefile_fd = open(cuefile, 'r', encoding=literals.utf_8)
         try:
             cuefile_fd.readlines()
             cuefile_fd.close()
         except UnicodeDecodeError:
             cuefile_fd.close()
-            cuefile_fd = open(cuefile, 'r', encoding='cp1252')
+            cuefile_fd = open(cuefile, 'r', encoding=literals.cp1252)
             cuefile_fd.readlines()
             cuefile_fd.close()
-            encoding = 'cp1252'
+            encoding = literals.cp1252
         self.config.cuefile_encoding = encoding

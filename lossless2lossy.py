@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+import literals
 
 from cuefile import Cuefile
 from tagging import Tagging
@@ -17,25 +18,25 @@ class ConvertConfig:
         self.encoder = ''
         self.splitter = ''
         self.tagger = ''
-        self.cuefile_encoding = 'utf-8'
+        self.cuefile_encoding = literals.utf_8
         self.single_lossless_file = None
         self.args = args
         self.single_lossless_file = None
-        self.decode_tools = { 'flac_bin' : ['flac'],
-                                'shntool_bin' : ['shntool', 'split', '-o', 'wav', '-O', 'always'],
-                                'ffmpeg_bin' : ['ffmpeg'],
-                                'mac_bin' : ['mac'],
-                                'wvunpack_bin' : 'wvunpack' }
-        self.encode_tools = { 'ffmpeg_bin' : ['ffmpeg'],
-                                'afconvert_bin' : ['afconvert', '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
-                                                   '127', '-s', '2', '--soundcheck-generate'] }
-        self.other_tools = { 'mp4box_bin' : ['mp4box'],
-                               'ffmpeg_bin' : ['ffmpeg'],
-                               'atomicparsley_bin' : ['AtomicParsley', '--overWrite'] }
-        self.decoder = 'ffmpeg_bin'
-        self.encoder = 'afconvert_bin'
-        self.splitter = 'shntool_bin'
-        self.tagger = 'atomicparsley_bin'
+        self.decode_tools = { literals.flac : [literals.flac],
+                              literals.shntool : [literals.shntool, 'split', '-o', 'wav', '-O', 'always'],
+                              literals.ffmpeg : [literals.ffmpeg],
+                              literals.mac : [literals.mac],
+                              literals.wvunpack : literals.wvunpack }
+        self.encode_tools = { literals.ffmpeg : [literals.ffmpeg],
+                              literals.afconvert : [literals.afconvert, '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
+                                                    '127', '-s', '2', '--soundcheck-generate'] }
+        self.other_tools = { literals.mp4box : [literals.mp4box],
+                             literals.ffmpeg : [literals.ffmpeg],
+                             literals.atomicparsley : [literals.atomicparsley, '--overWrite'] }
+        self.decoder = literals.ffmpeg
+        self.encoder = literals.afconvert
+        self.splitter = literals.shntool
+        self.tagger = literals.atomicparsley
 
 
 def parser():
