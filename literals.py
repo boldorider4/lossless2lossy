@@ -21,6 +21,7 @@ title = 'title'
 infile = 'infile'
 outfile = 'outfile'
 cover = 'cover'
+losslessfile = 'losslessfile'
 
 # encoding
 utf_8 = 'utf-8'
