@@ -143,7 +143,13 @@ class Codec:
             encoder_cmd.append(outfile)
         elif config.encoder == literals.ffmpeg:
             encoder_cmd = config.encode_tools[config.encoder].copy()
+            encoder_cmd.append('-i')
             encoder_cmd.append(infile)
+            encoder_cmd.append('-c:a')
+            encoder_cmd.append('libfdk_aac')
+            encoder_cmd.append('-abr')
+            encoder_cmd.append('-b:a')
+            encoder_cmd.append(bitrate)
             encoder_cmd.append(outfile)
         else:
             raise NotImplementedError()
