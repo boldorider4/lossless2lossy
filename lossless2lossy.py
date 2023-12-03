@@ -34,7 +34,7 @@ class ConvertConfig:
                              literals.ffmpeg : [literals.ffmpeg],
                              literals.atomicparsley : [literals.atomicparsley, '--overWrite'] }
         self.decoder = literals.ffmpeg
-        self.encoder = literals.afconvert
+        self.encoder = literals.ffmpeg
         self.splitter = literals.shntool
         self.tagger = literals.atomicparsley
 
