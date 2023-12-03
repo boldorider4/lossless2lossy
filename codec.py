@@ -147,9 +147,9 @@ class Codec:
             encoder_cmd.append(infile)
             encoder_cmd.append('-c:a')
             encoder_cmd.append('libfdk_aac')
-            encoder_cmd.append('-abr')
-            encoder_cmd.append('-b:a')
-            encoder_cmd.append(bitrate)
+            encoder_cmd.append('-vbr') # bitrate param is ignored!
+            encoder_cmd.append('5')
+            encoder_cmd.append('-y')
             encoder_cmd.append(outfile)
         else:
             raise NotImplementedError()
