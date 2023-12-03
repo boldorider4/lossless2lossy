@@ -30,8 +30,7 @@ class ConvertConfig:
         self.encode_tools = { literals.ffmpeg : [literals.ffmpeg],
                               literals.afconvert : [literals.afconvert, '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
                                                     '127', '-s', '2', '--soundcheck-generate'] }
-        self.other_tools = { literals.mp4box : [literals.mp4box],
-                             literals.ffmpeg : [literals.ffmpeg],
+        self.other_tools = { literals.ffmpeg : [literals.ffmpeg],
                              literals.atomicparsley : [literals.atomicparsley, '--overWrite'] }
         self.decoder = literals.ffmpeg
         self.encoder = literals.ffmpeg

@@ -5,7 +5,6 @@ mac = 'mac'
 wvunpack = 'wvunpack'
 ffmpeg = 'ffmpeg'
 afconvert = 'afconvert'
-mp4box = 'mp4box'
 atomicparsley = 'atomicparsley'
 
 # tags
