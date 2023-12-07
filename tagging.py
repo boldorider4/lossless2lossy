@@ -87,6 +87,10 @@ class Tagging:
                         else:
                             album = config.args.album.title()
                         continue
+                else:
+                    if first_track_detected:
+                        track_tag_dict[literals.album] = config.args.album.title()
+                    album = config.args.album.title()
 
                 file_match = re.match(r'^ *\t*(REM )?TRACK .*$', cuefile_line, re.IGNORECASE)
                 if file_match is not None:
