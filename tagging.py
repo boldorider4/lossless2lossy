@@ -9,10 +9,11 @@ from utility import slugify
 class Tagging:
     def __init__(self, config):
         self.config = config
+        self.encoding = literals.utf_8
 
-    def _fix_coding_issue(self, line, encoding):
+    def _fix_coding_issue(self, line):
         try:
-            decoded_line = line.decode(encoding)
+            decoded_line = line.decode(self.encoding)
         except:
             decoded_line = line
         finally:
@@ -147,7 +148,8 @@ class Tagging:
         cwd = os.getcwd()
         audio_source_files = [f for f in os.listdir(cwd) if f.endswith('.ape')
                               or f.endswith('.wv')
-                              or f.endswith('.flac')]
+                              or f.endswith('.flac')
+                              or f.endswith('.m4a')]
         tag_dict = dict()
 
         decode_stderr = list()
@@ -182,9 +184,10 @@ class Tagging:
 
             if config.decoder == literals.ffmpeg:
                 decode_output = decode_stderr[track_idx]
+
                 for line in decode_output.readlines():
-                    decoded_line = line.decode(config.cuefile_encoding)
-                    decoded_line = self._fix_coding_issue(decoded_line, config.cuefile_encoding)
+                    decoded_line = self._detect_tag_line_encoding(line)
+                    decoded_line = self._fix_coding_issue(decoded_line)
 
                     if config.args.performer is None:
                         artist_match = re.match(r'^ +ARTIST +: +(.*)$', decoded_line, re.IGNORECASE)
@@ -235,7 +238,7 @@ class Tagging:
                     else:
                         genre = config.args.genre
 
-                    track_match = re.match(r'^ +track +: +(.*)$', decoded_line, re.IGNORECASE)
+                    track_match = re.match(r'^ +track +: +([0-9]+)/?[0-9]*$', decoded_line, re.IGNORECASE)
                     if track_match is not None:
                         track = int(track_match.group(1))
                         continue
@@ -266,3 +269,17 @@ class Tagging:
         config.single_lossless_file = False
 
         return tag_dict
+
+    def _detect_tag_line_encoding(self, line):
+        try:
+            decoded_line = line.decode(self.encoding)
+        except UnicodeDecodeError:
+            encodings = (literals.utf_8, literals.cp1252, literals.windows_1252)
+            for enc in encodings:
+                try:
+                    decoded_line = line.decode(enc)
+                    self.encoding = enc
+                    break
+                except UnicodeDecodeError:
+                    continue
+        return decoded_line

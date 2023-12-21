@@ -25,3 +25,4 @@ losslessfile = 'losslessfile'
 # encoding
 utf_8 = 'utf-8'
 cp1252 = 'cp1252'
+windows_1252 = 'windows-1252'
