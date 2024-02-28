@@ -83,15 +83,15 @@ class Tagging:
                         track_tag_dict[literals.title] = title.title()
                         track_tag_dict[literals.outfile] = f'{n_track:02d} {slugify(title)}.m4a'
                     else:
-                        if config.args.album is None:
-                            album = title_match.group(2)
-                        else:
+                        if config.args.album is not None:
                             album = config.args.album.title()
+                        else:
+                            album = title_match.group(2)
                         continue
-                else:
-                    if first_track_detected:
-                        track_tag_dict[literals.album] = config.args.album.title()
+                elif config.args.album is not None:
                     album = config.args.album.title()
+                    if first_track_detected:
+                        track_tag_dict[literals.album] = album
 
                 file_match = re.match(r'^ *\t*(REM )?TRACK .*$', cuefile_line, re.IGNORECASE)
                 if file_match is not None:
