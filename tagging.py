@@ -32,8 +32,9 @@ class Tagging:
 
         n_track = 0
         n_lossless_file = 0
-        global_artist = None
-        global_genre = None
+        global_artist = None if config.args.performer is None else config.args.performer.title()
+        global_genre = None if config.args.genre is None else config.args.genre.title()
+        album = None if config.args.album is None else config.args.album.title()
         first_track_detected = False
         # detecting multiple lossless files
         lossless_files = dict()
@@ -58,10 +59,8 @@ class Tagging:
                             track_tag_dict[literals.artist] = artist.title()
                         global_artist = artist.title()
                         continue
-                else:
-                    if first_track_detected:
-                        track_tag_dict[literals.artist] = config.args.performer.title()
-                    global_artist = config.args.performer.title()
+                elif first_track_detected:
+                    track_tag_dict[literals.artist] = global_artist
 
                 if config.args.genre is None:
                     genre_match = re.match(r'^ *\t*(REM )?GENRE *\t*["\'](.*)["\'] *$', cuefile_line, re.IGNORECASE)
@@ -71,10 +70,8 @@ class Tagging:
                             track_tag_dict[literals.genre] = genre.title()
                         global_genre = genre.title()
                         continue
-                else:
-                    if first_track_detected:
-                        track_tag_dict[literals.genre] = config.args.genre.title()
-                    global_genre = config.args.genre.title()
+                elif first_track_detected:
+                    track_tag_dict[literals.genre] = global_genre
 
                 title_match = re.match(r'^ *\t*(REM )?TITLE *\t*["\'](.*)["\'] *$', cuefile_line, re.IGNORECASE)
                 if title_match is not None:
@@ -82,16 +79,10 @@ class Tagging:
                         title = title_match.group(2)
                         track_tag_dict[literals.title] = title.title()
                         track_tag_dict[literals.outfile] = f'{n_track:02d} {slugify(title)}.m4a'
-                    else:
-                        if config.args.album is not None:
-                            album = config.args.album.title()
-                        else:
-                            album = title_match.group(2)
-                        continue
-                elif config.args.album is not None:
-                    album = config.args.album.title()
-                    if first_track_detected:
                         track_tag_dict[literals.album] = album
+                    elif config.args.album is None:
+                        album = title_match.group(2)
+                    continue
 
                 file_match = re.match(r'^ *\t*(REM )?TRACK .*$', cuefile_line, re.IGNORECASE)
                 if file_match is not None:
@@ -114,6 +105,7 @@ class Tagging:
                         track_tag_dict[literals.cover] = config.args.cover
                     else:
                         track_tag_dict[literals.cover] = ''
+                    continue
 
                 file_match = re.match(r'^ *\t*FILE *\t*"(.*)" *(WAVE)?(FLAC)?(APE)? *\t*$', cuefile_line, re.IGNORECASE)
                 if file_match is not None:
