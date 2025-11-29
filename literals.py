@@ -4,6 +4,7 @@ shntool = 'shntool'
 mac = 'mac'
 wvunpack = 'wvunpack'
 ffmpeg = 'ffmpeg'
+opus = 'opus'
 afconvert = 'afconvert'
 atomicparsley = 'atomicparsley'
 

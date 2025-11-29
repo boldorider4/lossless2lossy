@@ -151,6 +151,20 @@ class Codec:
             encoder_cmd.append('5')
             encoder_cmd.append('-y')
             encoder_cmd.append(outfile)
+        elif config.encoder == literals.opus:
+            encoder_cmd = config.encode_tools[config.encoder].copy()
+            encoder_cmd.append('-i')
+            encoder_cmd.append(infile)
+            encoder_cmd.append('-c:a')
+            encoder_cmd.append('libopus')
+            encoder_cmd.append('-b:a')
+            encoder_cmd.append('256k')
+            encoder_cmd.append('-vbr')
+            encoder_cmd.append('on')
+            encoder_cmd.append('-compression_level')
+            encoder_cmd.append('10')
+            encoder_cmd.append('-y')
+            encoder_cmd.append(outfile)
         else:
             raise NotImplementedError()
         return encoder_cmd

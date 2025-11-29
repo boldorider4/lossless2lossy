@@ -28,12 +28,14 @@ class ConvertConfig:
                               literals.mac : [literals.mac],
                               literals.wvunpack : literals.wvunpack }
         self.encode_tools = { literals.ffmpeg : [literals.ffmpeg],
+                              literals.opus: [literals.ffmpeg],
                               literals.afconvert : [literals.afconvert, '-v', '-d', 'aac', '-f', 'm4af', '-u', 'pgcm', '2', '-q',
                                                     '127', '-s', '2', '--soundcheck-generate'] }
         self.other_tools = { literals.ffmpeg : [literals.ffmpeg],
                              literals.atomicparsley : [literals.atomicparsley, '--overWrite'] }
         self.decoder = literals.ffmpeg
-        self.encoder = literals.ffmpeg
+#        self.encoder = literals.ffmpeg
+        self.encoder = literals.opus
         self.splitter = literals.shntool
         self.tagger = literals.atomicparsley
 
