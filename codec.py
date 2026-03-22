@@ -25,7 +25,14 @@ class Codec:
                 decode_cmd.append(config.single_lossless_file_name)
 
             piped_subprocess = subprocess_popen(decode_cmd)
-            piped_subprocess.wait()
+            stdout_data, stderr_data = piped_subprocess.communicate()
+            if piped_subprocess.returncode != 0:
+                print('splitting failed with exit code {}'.format(piped_subprocess.returncode))
+                if stderr_data:
+                    print(stderr_data.decode('utf-8', errors='replace'), end='')
+                if stdout_data and not (stderr_data and stderr_data.strip()):
+                    print(stdout_data.decode('utf-8', errors='replace'), end='')
+                exit(-1)
         elif 1 not in tag_dict:
             print('No files containing tags found! Leaving decode function...')
             exit(-1)
