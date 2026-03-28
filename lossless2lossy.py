@@ -34,8 +34,8 @@ class ConvertConfig:
         self.other_tools = { literals.ffmpeg : [literals.ffmpeg],
                              literals.atomicparsley : [literals.atomicparsley, '--overWrite'] }
         self.decoder = literals.ffmpeg
-#        self.encoder = literals.ffmpeg
-        self.encoder = literals.opus
+        self.encoder = literals.ffmpeg
+#        self.encoder = literals.opus
         self.splitter = literals.shntool
         self.tagger = literals.atomicparsley
 
